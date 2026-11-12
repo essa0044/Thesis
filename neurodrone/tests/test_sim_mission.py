@@ -41,7 +41,7 @@ class FakeCams:
 def test_vlm_worker_one_step(monkeypatch):
     calls = []
 
-    def fake_ask(url, model, jpeg, instr, timeout=60):
+    def fake_ask(url, model, jpeg, instr, timeout=60, num_ctx=2048):
         calls.append(instr)
         return '{"found": true, "box": [450, 450, 550, 550]}', 0.3  # norm1000, centred
 

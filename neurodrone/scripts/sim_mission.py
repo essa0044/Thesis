@@ -33,9 +33,12 @@ from neurodrone.types import VehicleState, VelocityCmd
 from neurodrone.vlm import build_prompt, encode_jpeg, parse_goal
 
 
-def ask_ollama(url, model, jpeg, instruction, timeout=60):
-    body = {"model": model, "stream": False, "think": False, "keep_alive": "30m",
-            "options": {"temperature": 0, "num_predict": 128},
+def ask_ollama(url, model, jpeg, instruction, timeout=240, num_ctx=2048):
+    """One VLM call. num_ctx must be the same in every call (and in scripts/vlm_warmup.py): a different value makes
+    Ollama reload the model. The timeout is long on purpose: when the client gives up, Ollama still finishes that
+    request, so the next one waits behind it and times out too."""
+    body = {"model": model, "stream": False, "think": False, "keep_alive": "60m",
+            "options": {"temperature": 0, "num_predict": 128, "num_ctx": num_ctx},
             "messages": [{"role": "user", "content": build_prompt(instruction), "images": [base64.b64encode(jpeg).decode()]}]}
     req = urllib.request.Request(url.rstrip("/") + "/api/chat", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
     t0 = time.monotonic()
@@ -77,7 +80,9 @@ class VlmWorker(threading.Thread):
                 continue
             jpeg, sent = encode_jpeg(rgb, max_side=self.a.max_side, quality=90)
             try:
-                text, lat = ask_ollama(self.a.ollama, self.a.model, jpeg, self.a.instruction)
+                text, lat = ask_ollama(self.a.ollama, self.a.model, jpeg, self.a.instruction,
+                                       timeout=getattr(self.a, "vlm_timeout", 240.0),
+                                       num_ctx=getattr(self.a, "num_ctx", 2048))
             except Exception as e:  # noqa: BLE001
                 self.log.log("vlm_error", error=repr(e)[:300])
                 print(f"[vlm] error: {e!r}", flush=True)
@@ -218,6 +223,8 @@ def main():
     ap.add_argument("--rate", type=float, default=20.0)
     ap.add_argument("--vlm-period", type=float, default=1.5)
     ap.add_argument("--max-side", type=int, default=896)
+    ap.add_argument("--vlm-timeout", type=float, default=240.0, help="s to wait for one VLM answer")
+    ap.add_argument("--num-ctx", type=int, default=2048, help="Ollama context length (smaller = less GPU memory)")
     ap.add_argument("--standoff", type=float, default=1.5, help="stop this far before the target (m)")
     ap.add_argument("--radius", type=float, default=0.8,
                     help="guard corridor radius from the drone's centre (m); X500 propeller tips reach ~0.4 m")
