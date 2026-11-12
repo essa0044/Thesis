@@ -1,0 +1,19 @@
+{
+  "model": "qwen2.5vl:3b",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "image_max_side": 448,
+  "instruction": "the dog",
+  "queries": 16,
+  "errors": 0,
+  "latency_s": {
+    "mean": 17.85037500000908,
+    "p50": 25.16400000010617,
+    "p95": 29.038749999832362,
+    "max": 29.95300000021234,
+    "n": 16
+  },
+  "jpeg_encode_ms_mean": 6.106506218202412,
+  "parse_success": 0.0,
+  "prompt_tokens_mean": 0.0,
+  "completion_tokens_mean": 0.0
+}

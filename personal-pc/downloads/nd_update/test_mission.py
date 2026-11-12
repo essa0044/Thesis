@@ -1,0 +1,125 @@
+"""neurodrone.mission: geometry, depth guard, consensus and steering of the VLM-goal mission (no I/O)."""
+import math
+
+import numpy as np
+
+from neurodrone import mission as m
+from neurodrone.types import VehicleState
+
+RGB = m.Pinhole(1920, 1080, 1.204)  # the Gazebo x500_depth cameras (OakD-Lite model)
+DEP = m.Pinhole(640, 480, 1.274)
+
+
+def st(n=0.0, e=0.0, d=-2.5, yaw=0.0, roll=0.0, pitch=0.0):
+    return VehicleState(north_m=n, east_m=e, down_m=d, yaw_deg=yaw, roll_deg=roll, pitch_deg=pitch)
+
+
+def test_pinhole_roundtrip_and_rotation():
+    p = RGB.pixel(RGB.ray(1500.0, 300.0) * 7.0)
+    assert abs(p[0] - 1500) < 1e-6 and abs(p[1] - 300) < 1e-6
+    R = m.R_ned_from_frd(0, 0, 90)  # facing east: body forward = east
+    assert np.allclose(R @ [1, 0, 0], [0, 1, 0], atol=1e-9) and np.allclose(R @ [0, 1, 0], [-1, 0, 0], atol=1e-9)
+
+
+def test_box_depth_maps_between_cameras():
+    depth = np.full((480, 640), 9.0, np.float32)
+    # an object 4 m away, right of centre: where does the RGB box land in the depth image?
+    ray = RGB.ray(0.7 * 1920, 0.5 * 1080)
+    u, v = DEP.pixel(ray)
+    depth[int(v) - 15:int(v) + 15, int(u) - 15:int(u) + 15] = 4.0
+    assert abs(m.box_depth(depth, DEP, RGB, [0.68, 0.47, 0.72, 0.53]) - 4.0) < 1e-6
+    assert m.box_depth(np.full((480, 640), np.nan, np.float32), DEP, RGB, [0.4, 0.4, 0.6, 0.6]) is None
+
+
+def test_goal_from_box_standoff_and_heading():
+    g = m.goal_from_box([0.45, 0.45, 0.55, 0.55], 6.0, RGB, st(yaw=90), cam_offset_frd=(0, 0, 0), standoff_m=1.5)
+    assert abs(g[0]) < 1e-6 and abs(g[1] - 4.5) < 1e-6 and abs(g[2] + 2.5) < 1e-9  # 6 m east, 1.5 m short, same altitude
+    g2 = m.goal_from_box([0.0, 0.45, 0.1, 0.55], 6.0, RGB, st(), cam_offset_frd=(0, 0, 0))
+    assert g2[1] < -1.0  # a box on the left of the image -> a goal to the west of north
+
+
+def test_corridor_and_guard():
+    wall = np.full((480, 640), 3.0, np.float32)
+    assert abs(m.corridor_distance(wall, DEP, np.array([1.0, 0, 0])) - 3.0) < 0.01
+    g = m.guard(wall, DEP, np.array([1.0, 0, 0]), 0.05)
+    assert not g.blocked and abs(g.ttc_s - 3.0) < 0.05
+    g = m.guard(wall, DEP, np.array([2.0, 0, 0]), 0.05)  # 1.5 s to contact
+    assert g.blocked and "contact" in g.reason
+    g = m.guard(np.full((480, 640), 1.0, np.float32), DEP, np.array([0.3, 0, 0]), 0.05)
+    assert g.blocked and "obstacle" in g.reason
+    assert m.guard(None, DEP, np.array([1.0, 0, 0]), 0.0).blocked  # no depth: never fly blind
+    assert m.guard(wall, DEP, np.array([1.0, 0, 0]), 2.0).blocked  # stale depth
+    side = np.full((480, 640), np.inf, np.float32)
+    side[:, 600:] = 2.0  # something off to the right, not in the corridor
+    assert not m.guard(side, DEP, np.array([1.0, 0, 0]), 0.05).blocked
+    assert m.corridor_distance(np.where(np.random.default_rng(0).random((480, 640)) < 2e-5, 0.5, 9.0).astype(np.float32),
+                               DEP, np.array([1.0, 0, 0])) > 8.0  # a few speckle pixels are ignored
+
+
+def test_consensus_needs_agreement():
+    c = m.Consensus(need=2, window=3, tol_m=1.0)
+    assert c.add(np.array([5.0, 0, -2])) is None
+    assert c.add(np.array([0.0, 9, -2])) is None  # disagrees
+    got = c.add(np.array([5.4, 0.2, -2]))
+    assert got is not None and abs(got[0] - 5.2) < 1e-9
+    assert c.add(None) is None  # the first answer dropped out of the window: no agreement left
+    assert c.add(np.array([5.2, 0.1, -2])) is not None  # agrees with the 3rd again
+
+
+def test_steer_turn_then_fly_and_guard():
+    s = st(yaw=0)
+    cmd = m.steer(np.array([0.0, 5.0, -2.5]), s)  # goal due east: turn first
+    assert cmd.phase == "turn" and cmd.yaw_rate > 0 and cmd.vx == 0
+    cmd = m.steer(np.array([5.0, 0.2, -2.5]), s, vmax=1.0)
+    assert cmd.phase == "fly" and 0.9 < cmd.vx <= 1.0
+    assert m.steer(np.array([0.2, 0.1, -2.5]), s).phase == "arrived"
+    assert m.steer(None, s).phase == "search"
+    blocked = m.apply_guard(cmd, m.GuardResult(1.0, 1.0, True, "obstacle 1.0 m ahead"))
+    assert blocked.vx == 0 and blocked.phase == "blocked"
+    assert math.isclose(m.apply_guard(cmd, m.GuardResult(9, 9, False)).vx, cmd.vx)
+
+
+# ----------------------------------------------------------------------------- go-around
+def _pole_depth(cam, z=1.8, y0=-0.35, y1=-0.05):
+    """Depth image with only a pole (lateral y0..y1 m, body FRD, + = right) at z metres, everything else no return."""
+    d = np.full((cam.height, cam.width), np.nan, np.float32)
+    u0, u1 = (int(y / z * cam.f + cam.width / 2) for y in (y0, y1))
+    d[:, max(u0, 0):min(u1 + 1, cam.width)] = z
+    return d
+
+
+def test_avoider_goes_around_the_free_side_and_commits():
+    from neurodrone.mission import Avoider, Command, Pinhole
+    cam = Pinhole(160, 120, 1.274)
+    av = Avoider()
+    fly = Command(1.0, 0.0, 0.0, 0.0, "fly")
+    out, g = av.step(fly, _pole_depth(cam), cam, 0.0, now=0.0)
+    assert g.blocked and out.phase == "avoid"
+    assert out.vy > 0 and abs(out.vx) > 0  # pole slightly left -> goes right, still forwards
+    assert abs(math.hypot(out.vx, out.vy) - 0.5) < 1e-6
+    # straight path free again (pole out of view): keeps the go-around direction for commit_s ...
+    empty = np.full((cam.height, cam.width), np.nan, np.float32)
+    out2, g2 = av.step(fly, empty, cam, 0.0, now=1.0)
+    assert not g2.blocked and out2.phase == "avoid" and out2.vy > 0
+    # ... then back to the plain command
+    out3, _ = av.step(fly, empty, cam, 0.0, now=2.5)
+    assert out3.phase == "fly" and out3.vy == 0
+
+
+def test_avoider_stops_when_no_direction_is_free():
+    from neurodrone.mission import Avoider, Command, Pinhole
+    cam = Pinhole(160, 120, 1.274)
+    wall = np.full((cam.height, cam.width), 1.5, np.float32)
+    out, g = Avoider().step(Command(1.0, 0.0, 0.0, 0.0, "fly"), wall, cam, 0.0, now=0.0)
+    assert g.blocked and out.phase == "blocked" and out.vx == 0 and out.vy == 0
+
+
+def test_avoider_stale_depth_stops_and_turning_untouched():
+    from neurodrone.mission import Avoider, Command, Pinhole
+    cam = Pinhole(160, 120, 1.274)
+    av = Avoider()
+    out, g = av.step(Command(1.0, 0.0, 0.0, 0.0, "fly"), None, cam, 9.9, now=0.0)
+    assert out.phase == "blocked" and out.vx == 0
+    turn = Command(0.0, 0.0, 0.0, 20.0, "turn")
+    out, _ = av.step(turn, _pole_depth(cam), cam, 0.0, now=0.0)
+    assert out == turn

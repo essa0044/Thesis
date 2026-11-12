@@ -1,0 +1,97 @@
+# neurodrone default configuration. Every key is optional; omitted keys keep their default.
+# These defaults were tuned on the SYNTHETIC simulator only. Re-tune the snn.* values on recorded
+# flights from your own sensor (scripts/replay_snn.py) and the coordinator.* values in SITL/bench
+# tests before trusting them. Descriptions of every field: neurodrone/config.py.
+#
+# Things you will almost certainly change:
+#   camera.hfov_deg            horizontal field of view of the RGB camera used by the VLM
+#   vlm.base_url / vlm.model   your local OpenAI-compatible VLM server and model name
+#   vlm.period_s               0 = continuous; try 1..10 for the thesis experiments
+#   coordinator.use_clearance  set true once the depth camera is wired (strongly recommended)
+#   coordinator.cruise_speed   derive from measured detection TTC: see neurodrone/safety.py
+snn:
+  impl: spiking          # spiking = fully spiking detector (neurodrone/snn_spiking.py)
+                         # hybrid  = the earlier detector, kept as the baseline (neurodrone/snn.py)
+  # shared by both: geometry and the layer-1 / motion-detector time window
+  deltas_px: null
+  dt_min_us: 2000
+  dt_max_us: 150000
+  r_min_frac: 0.05
+  roi_y: [0.1, 0.9]
+  band_edges_frac: [0.0, 0.14, 0.28, 0.5]
+  # hybrid only
+  kappa: 1.0
+  z_eps: 4.0
+  tau_m_s: 0.05
+  w_syn: 1.0
+  theta: 4.0
+  v_floor: -2.0
+  tau_rate_s: 0.1
+  rate_alarm: 15.0
+  spiking:               # only used when impl: spiking
+    step_us: 1000
+    tau_m_s: 0.05
+    kappa: 1.0
+    theta0: 6.0
+    beta: 0.12
+    tau_a_s: 0.05
+    v_floor: -1.0
+    coinc_us: 20000
+    tau_rate_s: 0.1
+    rate_alarm: 15.0
+    adv_rate_full: 100.0
+coordinator:
+  cruise_speed: 1.0
+  max_speed: 1.5
+  accel_limit: 1.0
+  yaw_gain: 0.8
+  max_yaw_rate: 40.0
+  yaw_gate_deg_s: 10.0
+  lateral_gain: 0.0
+  lateral_gate_yaw: 6.0
+  urgency_slowdown: false
+  slow_start: 0.3
+  slow_end: 0.8
+  search_yaw_rate: 10.0
+  search_max_deg: 360.0
+  arrive_bearing_deg: 12.0
+  arrive_w_frac: 0.15
+  snn_timeout_s: 0.25
+  goal_ttl_s: 8.0
+  blind_timeout_s: 3.0
+  failsafe_action: land
+  adjudicate_timeout_s: 10.0
+  adj_arm_s: 1.0
+  use_clearance: false
+  clearance_timeout_s: 0.5
+  clearance_margin_m: 0.8
+  brake_decel: 2.0
+  reaction_s: 0.4
+  dodge_speed: 1.0
+  dodge_distance_m: 2.0
+  settle_s: 0.5
+  episode_window_s: 25.0
+  max_episodes: 4
+  escalation: 0.5
+  min_battery: 0.25
+  max_dist_home_m: 40.0
+  max_alt_m: 30.0
+vlm:
+  base_url: http://127.0.0.1:8080/v1
+  model: qwen2.5-vl-3b
+  api_key: none
+  period_s: 2.0
+  timeout_s: 20.0
+  max_tokens: 80
+  image_max_side: 448
+  jpeg_quality: 85
+  lost_patience: 2
+  coords: auto
+camera:
+  device: '0'
+  width: 640
+  height: 480
+  hfov_deg: 69.0
+runtime:
+  control_hz: 25.0
+  log_path: null

@@ -1,0 +1,8 @@
+﻿--- qwen3-vl:2b-instruct ---
+NAME                    ID              SIZE      PROCESSOR          CONTEXT    UNTIL              
+qwen3-vl:2b-instruct    ea422f1e7365    2.3 GB    18%/82% CPU/GPU    4096       4 minutes from now    
+
+--- qwen2-5vl-3b-cpu ---
+NAME                       ID              SIZE      PROCESSOR    CONTEXT    UNTIL              
+qwen2-5vl-3b-cpu:latest    ac34f4d8171d    2.9 GB    100% CPU     4096       4 minutes from now    
+

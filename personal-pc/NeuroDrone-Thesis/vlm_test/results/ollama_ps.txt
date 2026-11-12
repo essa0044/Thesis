@@ -1,0 +1,4 @@
+﻿--- qwen2.5vl:3b ---
+NAME            ID              SIZE      PROCESSOR          CONTEXT    UNTIL              
+qwen2.5vl:3b    fb90415cde1e    3.5 GB    57%/43% CPU/GPU    4096       4 minutes from now    
+

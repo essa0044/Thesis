@@ -1,0 +1,200 @@
+{
+ "spiking": {
+  "detect_ttc_s": {
+   "wall 3 m": 6.19,
+   "box 1.5 m": 4.42,
+   "blank wall 3 m": 7.27,
+   "pole 0.4 m": 3.55,
+   "pole 0.15 m": null
+  },
+  "false_alarm_max": {
+   "hover + 3 deg shake, object ahead": 0.0,
+   "hover + 3 deg shake, object to the side": 0.0,
+   "forward + 5 deg shake, empty": 0.0,
+   "forward + 5 deg shake + 10x noise, empty": 0.0,
+   "turning 30 deg/s, empty": 0.0,
+   "forward + 10x noise, empty": 0.0,
+   "object passing on the left": 0.0
+  },
+  "cut_ttc_s": {
+   "jittered (default)": 6.19,
+   "aligned with sensor frames": 6.19,
+   "jittered, other seed": 6.19
+  },
+  "cpu_ms": {
+   "mean": 0.474,
+   "p95": 1.1,
+   "max": 3.111
+  },
+  "closed_loop": {
+   "approach_target": {
+    "result": "arrived",
+    "min_clearance_m": 6.3,
+    "first_alarm_clearance_m": 7.0,
+    "sim_time_s": 11.0,
+    "dodges": 0
+   },
+   "dodge_obstacle": {
+    "result": "arrived",
+    "min_clearance_m": 5.69,
+    "first_alarm_clearance_m": 6.6,
+    "sim_time_s": 33.0,
+    "dodges": 1
+   },
+   "bearing_offset": {
+    "result": "arrived",
+    "min_clearance_m": 8.23,
+    "first_alarm_clearance_m": 8.9,
+    "sim_time_s": 9.0,
+    "dodges": 0
+   },
+   "jitter_approach": {
+    "result": "arrived",
+    "min_clearance_m": 1.07,
+    "first_alarm_clearance_m": 1.8,
+    "sim_time_s": 15.0,
+    "dodges": 0
+   },
+   "vlm_silent": {
+    "result": "-",
+    "min_clearance_m": 18.0,
+    "first_alarm_clearance_m": null,
+    "sim_time_s": 8.0,
+    "dodges": 0
+   },
+   "snn_blackout": {
+    "result": "-",
+    "min_clearance_m": 34.53,
+    "first_alarm_clearance_m": null,
+    "sim_time_s": 8.3,
+    "dodges": 0
+   },
+   "blank_wall_snn_only": {
+    "result": "COLLISION",
+    "min_clearance_m": 0.35,
+    "first_alarm_clearance_m": null,
+    "sim_time_s": 8.6,
+    "dodges": 0
+   },
+   "blank_wall_with_range": {
+    "result": "arrived",
+    "min_clearance_m": 0.78,
+    "first_alarm_clearance_m": 7.7,
+    "sim_time_s": 31.0,
+    "dodges": 1
+   },
+   "approach_with_range": {
+    "result": "arrived",
+    "min_clearance_m": 6.3,
+    "first_alarm_clearance_m": 7.0,
+    "sim_time_s": 11.0,
+    "dodges": 0
+   }
+  },
+  "activity_per_s": {
+   "events": 9816,
+   "layer1_spikes": 11628,
+   "layer2_spikes": 91,
+   "layer3_spikes": 36,
+   "synops": 101912
+  },
+  "neurons": {
+   "layer 1 coincidence (motion)": 77856,
+   "layer 2 region (expansion)": 9,
+   "layer 3 alarm (both sides)": 3
+  }
+ },
+ "hybrid": {
+  "detect_ttc_s": {
+   "wall 3 m": 4.42,
+   "box 1.5 m": 3.49,
+   "blank wall 3 m": 5.57,
+   "pole 0.4 m": 2.55,
+   "pole 0.15 m": null
+  },
+  "false_alarm_max": {
+   "hover + 3 deg shake, object ahead": 0.0,
+   "hover + 3 deg shake, object to the side": 0.0,
+   "forward + 5 deg shake, empty": 0.0,
+   "forward + 5 deg shake + 10x noise, empty": 0.0,
+   "turning 30 deg/s, empty": 0.0,
+   "forward + 10x noise, empty": 0.0,
+   "object passing on the left": 0.0
+  },
+  "cut_ttc_s": {
+   "jittered (default)": 4.42,
+   "aligned with sensor frames": 5.24,
+   "jittered, other seed": 5.24
+  },
+  "cpu_ms": {
+   "mean": 0.13,
+   "p95": 0.353,
+   "max": 1.615
+  },
+  "closed_loop": {
+   "approach_target": {
+    "result": "arrived",
+    "min_clearance_m": 4.85,
+    "first_alarm_clearance_m": 5.5,
+    "sim_time_s": 13.0,
+    "dodges": 0
+   },
+   "dodge_obstacle": {
+    "result": "arrived",
+    "min_clearance_m": 5.07,
+    "first_alarm_clearance_m": 6.0,
+    "sim_time_s": 35.0,
+    "dodges": 1
+   },
+   "bearing_offset": {
+    "result": "arrived",
+    "min_clearance_m": 4.32,
+    "first_alarm_clearance_m": 5.2,
+    "sim_time_s": 13.0,
+    "dodges": 0
+   },
+   "jitter_approach": {
+    "result": "arrived",
+    "min_clearance_m": 2.03,
+    "first_alarm_clearance_m": 2.8,
+    "sim_time_s": 15.0,
+    "dodges": 0
+   },
+   "vlm_silent": {
+    "result": "-",
+    "min_clearance_m": 18.0,
+    "first_alarm_clearance_m": null,
+    "sim_time_s": 8.0,
+    "dodges": 0
+   },
+   "snn_blackout": {
+    "result": "-",
+    "min_clearance_m": 34.53,
+    "first_alarm_clearance_m": null,
+    "sim_time_s": 8.3,
+    "dodges": 0
+   },
+   "blank_wall_snn_only": {
+    "result": "COLLISION",
+    "min_clearance_m": 0.35,
+    "first_alarm_clearance_m": null,
+    "sim_time_s": 8.6,
+    "dodges": 0
+   },
+   "blank_wall_with_range": {
+    "result": "arrived",
+    "min_clearance_m": 0.78,
+    "first_alarm_clearance_m": 5.7,
+    "sim_time_s": 33.0,
+    "dodges": 1
+   },
+   "approach_with_range": {
+    "result": "arrived",
+    "min_clearance_m": 4.85,
+    "first_alarm_clearance_m": 5.5,
+    "sim_time_s": 13.0,
+    "dodges": 0
+   }
+  }
+ }
+}

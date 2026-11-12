@@ -1,0 +1,121 @@
+{
+  "model": "qwen3-vl:2b-instruct",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "image_max_side": 448,
+  "instruction": "the dog",
+  "max_tokens": 512,
+  "queries": 16,
+  "errors": 0,
+  "latency_s": {
+    "mean": 9.591812499973457,
+    "p50": 13.015499999979511,
+    "p95": 16.733999999938533,
+    "max": 16.875,
+    "n": 16
+  },
+  "jpeg_encode_ms_mean": 5.161668756045401,
+  "parse_success": 1.0,
+  "prompt_tokens_mean": 1181.0,
+  "completion_tokens_mean": 17.25,
+  "found_accuracy": 1.0,
+  "x_mae_norm": 0.005012500000000003,
+  "x_mae_deg": 0.3458625000000002,
+  "samples": [
+    {
+      "image": "000000000025.jpg",
+      "latency_s": 1.531,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000030.jpg",
+      "latency_s": 1.422,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000034.jpg",
+      "latency_s": 1.422,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000036.jpg",
+      "latency_s": 1.437,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000042.jpg",
+      "latency_s": 4.688,
+      "text": "{\"found\": true, \"box\": [338, 89, 885, 615]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000049.jpg",
+      "latency_s": 13.0,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000061.jpg",
+      "latency_s": 13.031,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000064.jpg",
+      "latency_s": 1.454,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000074.jpg",
+      "latency_s": 16.687,
+      "text": "{\"found\": true, \"box\": [101, 644, 562, 888]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000109.jpg",
+      "latency_s": 16.875,
+      "text": "{\"found\": true, \"box\": [846, 704, 880, 748]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000307.jpg",
+      "latency_s": 16.422,
+      "text": "{\"found\": true, \"box\": [634, 414, 904, 784]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000309.jpg",
+      "latency_s": 16.094,
+      "text": "{\"found\": true, \"box\": [704, 117, 854, 325]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000394.jpg",
+      "latency_s": 16.312,
+      "text": "{\"found\": true, \"box\": [12, 30, 967, 967]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000400.jpg",
+      "latency_s": 16.047,
+      "text": "{\"found\": true, \"box\": [708, 232, 804, 347]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000490.jpg",
+      "latency_s": 15.891,
+      "text": "{\"found\": true, \"box\": [97, 387, 273, 677]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000009.jpg",
+      "latency_s": 1.156,
+      "text": "{\"found\": false}",
+      "parsed": true
+    }
+  ]
+}

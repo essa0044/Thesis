@@ -1,0 +1,35 @@
+1/4 detection (time-to-contact at first alarm, s; higher = earlier warning)
+   wall 3 m         spiking: 6.19  hybrid: 4.42
+   box 1.5 m        spiking: 4.42  hybrid: 3.49
+   blank wall 3 m   spiking: 7.27  hybrid: 5.57
+   pole 0.4 m       spiking: 3.55  hybrid: 2.55
+   pole 0.15 m      spiking: miss  hybrid: miss
+2/4 false alarms (worst frontal urgency; 1.0 = alarm)
+   hover + 3 deg shake, object ahead          spiking: 0.00  hybrid: 0.00
+   hover + 3 deg shake, object to the side    spiking: 0.00  hybrid: 0.00
+   forward + 5 deg shake, empty               spiking: 0.00  hybrid: 0.00
+   forward + 5 deg shake + 10x noise, empty   spiking: 0.00  hybrid: 0.00
+   turning 30 deg/s, empty                    spiking: 0.00  hybrid: 0.00
+   forward + 10x noise, empty                 spiking: 0.00  hybrid: 0.00
+   object passing on the left                 spiking: 0.00  hybrid: 0.00
+3/4 packet cutting (wall 3 m, time-to-contact at first alarm, s)
+   spiking  jittered (default): 6.19  aligned with sensor frames: 6.19  jittered, other seed: 6.19
+   hybrid   jittered (default): 4.42  aligned with sensor frames: 5.24  jittered, other seed: 5.24
+4/4 closed loop (whole system flying, oracle VLM)
+   approach_target        spiking: arrived (min clearance 6.3 m)  hybrid: arrived (min clearance 4.9 m)
+   dodge_obstacle         spiking: arrived (min clearance 5.7 m)  hybrid: arrived (min clearance 5.1 m)
+   bearing_offset         spiking: arrived (min clearance 8.2 m)  hybrid: arrived (min clearance 4.3 m)
+   jitter_approach        spiking: arrived (min clearance 1.1 m)  hybrid: arrived (min clearance 2.0 m)
+   vlm_silent             spiking: - (min clearance 18.0 m)  hybrid: - (min clearance 18.0 m)
+   snn_blackout           spiking: - (min clearance 34.5 m)  hybrid: - (min clearance 34.5 m)
+   blank_wall_snn_only    spiking: COLLISION (min clearance 0.3 m)  hybrid: COLLISION (min clearance 0.3 m)
+   blank_wall_with_range  spiking: arrived (min clearance 0.8 m)  hybrid: arrived (min clearance 0.8 m)
+   approach_with_range    spiking: arrived (min clearance 6.3 m)  hybrid: arrived (min clearance 4.9 m)
+
+summary
+   spiking  CPU per packet: mean 0.47 ms, p95 1.10 ms (this computer)
+   hybrid   CPU per packet: mean 0.13 ms, p95 0.35 ms (this computer)
+   spiking  neurons: {'layer 1 coincidence (motion)': 77856, 'layer 2 region (expansion)': 9, 'layer 3 alarm (both sides)': 3}
+   spiking  per second of approach flight: events 9,816, layer1_spikes 11,628, layer2_spikes 91, layer3_spikes 36, synops 101,912
+   written to /tmp/claude-0/-home-claude/e3fa4224-777e-5df5-8e9a-24f9692a29f8/scratchpad/snn/compare.json
+   (127 s)

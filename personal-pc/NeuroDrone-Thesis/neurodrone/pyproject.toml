@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neurodrone"
+version = "0.1.0"
+description = "Spiking-reflex + VLM-planner stack for drones (milestone 1)"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.21"]
+
+[project.optional-dependencies]
+yaml = ["pyyaml"]
+px4 = ["mavsdk-grpc"]            # gRPC-based MAVSDK-Python (import mavsdk_grpc). Plain mavsdk>=4 is NOT compatible.
+cam = ["opencv-python"]
+davis = ["dv-processing"]
+realsense = ["pyrealsense2"]
+dev = ["pytest", "pyyaml", "pillow"]
+
+[tool.setuptools]
+packages = ["neurodrone"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = ["slow: closed-loop simulations that take >5 s"]

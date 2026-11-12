@@ -1,0 +1,9 @@
+numpy>=1.21
+pyyaml
+pillow
+# optional, install what your hardware needs:
+# mavsdk-grpc        # PX4 via MAVSDK-Python (gRPC wrapper). Do NOT use plain mavsdk>=4: different API
+# opencv-python      # OpenCVCamera, faster JPEG encoding
+# dv-processing      # iniVation DAVIS/DVXplorer
+# pyrealsense2       # Intel RealSense depth
+# jetson-stats       # jtop power sampling on Jetson

@@ -1,0 +1,121 @@
+{
+  "model": "qwen3-vl:2b-instruct",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "image_max_side": 448,
+  "instruction": "the person",
+  "max_tokens": 512,
+  "queries": 16,
+  "errors": 0,
+  "latency_s": {
+    "mean": 13.984375,
+    "p50": 14.491999999852851,
+    "p95": 16.58274999994319,
+    "max": 16.594000000040978,
+    "n": 16
+  },
+  "jpeg_encode_ms_mean": 5.283981212414801,
+  "parse_success": 1.0,
+  "prompt_tokens_mean": 1183.6875,
+  "completion_tokens_mean": 17.0,
+  "found_accuracy": 1.0,
+  "x_mae_norm": 0.031181249999999976,
+  "x_mae_deg": 2.1515062499999984,
+  "samples": [
+    {
+      "image": "000000000025.jpg",
+      "latency_s": 13.172,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000030.jpg",
+      "latency_s": 13.141,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000034.jpg",
+      "latency_s": 13.125,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000036.jpg",
+      "latency_s": 16.375,
+      "text": "{\"found\": true, \"box\": [363, 244, 998, 998]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000042.jpg",
+      "latency_s": 13.0,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000064.jpg",
+      "latency_s": 13.0,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000071.jpg",
+      "latency_s": 13.14,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000072.jpg",
+      "latency_s": 13.11,
+      "text": "{\"found\": false}",
+      "parsed": true
+    },
+    {
+      "image": "000000000086.jpg",
+      "latency_s": 16.515,
+      "text": "{\"found\": true, \"box\": [288, 231, 544, 861]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000294.jpg",
+      "latency_s": 16.406,
+      "text": "{\"found\": true, \"box\": [40, 166, 621, 997]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000322.jpg",
+      "latency_s": 16.579,
+      "text": "{\"found\": true, \"box\": [114, 220, 441, 800]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000326.jpg",
+      "latency_s": 16.594,
+      "text": "{\"found\": true, \"box\": [234, 199, 811, 997]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000370.jpg",
+      "latency_s": 16.234,
+      "text": "{\"found\": true, \"box\": [194, 44, 996, 998]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000397.jpg",
+      "latency_s": 15.812,
+      "text": "{\"found\": true, \"box\": [0, 0, 364, 414]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000415.jpg",
+      "latency_s": 16.093,
+      "text": "{\"found\": true, \"box\": [0, 394, 345, 871]}",
+      "parsed": true
+    },
+    {
+      "image": "000000000009.jpg",
+      "latency_s": 1.454,
+      "text": "{\"found\": false}",
+      "parsed": true
+    }
+  ]
+}

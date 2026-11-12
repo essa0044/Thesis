@@ -1,0 +1,181 @@
+﻿[15:58:55] NeuroDrone VLM test started. Models: qwen3-vl:2b-instruct, qwen2.5vl:3b@cpu
+[15:58:55] Ollama found: C:\Users\essaa\AppData\Local\Programs\Ollama\ollama.exe | ollama version is 0.33.3
+[15:58:55] Ollama server is up.
+[15:58:56] Hardware info saved to results\hardware.txt
+[15:58:56] Installing numpy, pillow and pyyaml into the test environment...
+[15:58:57] Downloading model qwen3-vl:2b-instruct (skipped if it is already on this PC)...
+[16:00:02] Downloading model qwen2.5vl:3b (skipped if it is already on this PC)...
+[16:00:04] [?2026h[?25l[1Ggathering model components [K[?25h[?2026l[?2026h[?25l[1Ggathering model components [K[?25h[?2026l[?2026h[?25l[1Ggathering model components [K[?25h[?2026l[?2026h[?25l[1Ggathering model components [K[?25h[?2026l[?2026h[?25l[1Ggathering model components [K[?25h[?2026l[?2026h[?25l[1Ggathering model components [K[?25h[?2026l[?2026h[?25l[1Ggathering model components [K
+[16:00:04] using existing layer sha256:e9758e589d443f653821b7be9bb9092c1bf7434522b70ec6e83591b1320fdb4d [K
+[16:00:04] using existing layer sha256:a242d8dfdc8f8c2b0586ee85fba70adb408fb633aba2836fe1b05f2c46631474 [K
+[16:00:04] using existing layer sha256:75357d685f238b6afd7738be9786fdafde641eb6ca9a3be7471939715a68a4de [K
+[16:00:04] using existing layer sha256:832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e [K
+[16:00:04] creating new layer sha256:94457681bf847e7cd6065f1ad1f050549481123f2e3ff72bf5bd0fbca28ef3c8 [K
+[16:00:04] writing manifest [K
+[16:00:04] success [K[?25h[?2026l
+[16:00:04] Made qwen2-5vl-3b-cpu (CPU only).
+[16:00:04] Running qwen3-vl:2b-instruct on 'the person' (16 images)...
+[16:00:43]   [  1/16] 000000000025.jpg          13.17s  ->  '{"found": false}'
+[16:00:56]   [  2/16] 000000000030.jpg          13.14s  ->  '{"found": false}'
+[16:01:09]   [  3/16] 000000000034.jpg          13.12s  ->  '{"found": false}'
+[16:01:26]   [  4/16] 000000000036.jpg          16.38s  ->  '{"found": true, "box": [363, 244, 998, 998]}'
+[16:01:39]   [  5/16] 000000000042.jpg          13.00s  ->  '{"found": false}'
+[16:01:52]   [  6/16] 000000000064.jpg          13.00s  ->  '{"found": false}'
+[16:02:05]   [  7/16] 000000000071.jpg          13.14s  ->  '{"found": false}'
+[16:02:18]   [  8/16] 000000000072.jpg          13.11s  ->  '{"found": false}'
+[16:02:34]   [  9/16] 000000000086.jpg          16.52s  ->  '{"found": true, "box": [288, 231, 544, 861]}'
+[16:02:51]   [ 10/16] 000000000294.jpg          16.41s  ->  '{"found": true, "box": [40, 166, 621, 997]}'
+[16:03:07]   [ 11/16] 000000000322.jpg          16.58s  ->  '{"found": true, "box": [114, 220, 441, 800]}'
+[16:03:24]   [ 12/16] 000000000326.jpg          16.59s  ->  '{"found": true, "box": [234, 199, 811, 997]}'
+[16:03:40]   [ 13/16] 000000000370.jpg          16.23s  ->  '{"found": true, "box": [194, 44, 996, 998]}'
+[16:03:56]   [ 14/16] 000000000397.jpg          15.81s  ->  '{"found": true, "box": [0, 0, 364, 414]}'
+[16:04:12]   [ 15/16] 000000000415.jpg          16.09s  ->  '{"found": true, "box": [0, 394, 345, 871]}'
+[16:04:14]   [ 16/16] 000000000009.jpg           1.45s  ->  '{"found": false}'
+[16:04:14] {
+[16:04:14]   "model": "qwen3-vl:2b-instruct",
+[16:04:14]   "base_url": "http://127.0.0.1:11434/v1",
+[16:04:14]   "image_max_side": 448,
+[16:04:14]   "instruction": "the person",
+[16:04:14]   "max_tokens": 512,
+[16:04:14]   "queries": 16,
+[16:04:14]   "errors": 0,
+[16:04:14]   "latency_s": {
+[16:04:14]     "mean": 13.984375,
+[16:04:14]     "p50": 14.491999999852851,
+[16:04:14]     "p95": 16.58274999994319,
+[16:04:14]     "max": 16.594000000040978,
+[16:04:14]     "n": 16
+[16:04:14]   },
+[16:04:14]   "jpeg_encode_ms_mean": 5.283981212414801,
+[16:04:14]   "parse_success": 1.0,
+[16:04:14]   "prompt_tokens_mean": 1183.6875,
+[16:04:14]   "completion_tokens_mean": 17.0,
+[16:04:14]   "found_accuracy": 1.0,
+[16:04:14]   "x_mae_norm": 0.031181249999999976,
+[16:04:14]   "x_mae_deg": 2.1515062499999984
+[16:04:14] }
+[16:04:14] wrote C:\Users\essaa\Downloads\NeuroDrone-Thesis\vlm_test\results\run_2026-10-13_1558\qwen3-vl_2b-instruct__person.json
+[16:04:14] Running qwen3-vl:2b-instruct on 'the dog' (16 images)...
+[16:04:17]   [  1/16] 000000000025.jpg           1.53s  ->  '{"found": false}'
+[16:04:18]   [  2/16] 000000000030.jpg           1.42s  ->  '{"found": false}'
+[16:04:20]   [  3/16] 000000000034.jpg           1.42s  ->  '{"found": false}'
+[16:04:21]   [  4/16] 000000000036.jpg           1.44s  ->  '{"found": false}'
+[16:04:26]   [  5/16] 000000000042.jpg           4.69s  ->  '{"found": true, "box": [338, 89, 885, 615]}'
+[16:04:39]   [  6/16] 000000000049.jpg          13.00s  ->  '{"found": false}'
+[16:04:52]   [  7/16] 000000000061.jpg          13.03s  ->  '{"found": false}'
+[16:04:53]   [  8/16] 000000000064.jpg           1.45s  ->  '{"found": false}'
+[16:05:10]   [  9/16] 000000000074.jpg          16.69s  ->  '{"found": true, "box": [101, 644, 562, 888]}'
+[16:05:27]   [ 10/16] 000000000109.jpg          16.88s  ->  '{"found": true, "box": [846, 704, 880, 748]}'
+[16:05:43]   [ 11/16] 000000000307.jpg          16.42s  ->  '{"found": true, "box": [634, 414, 904, 784]}'
+[16:05:59]   [ 12/16] 000000000309.jpg          16.09s  ->  '{"found": true, "box": [704, 117, 854, 325]}'
+[16:06:16]   [ 13/16] 000000000394.jpg          16.31s  ->  '{"found": true, "box": [12, 30, 967, 967]}'
+[16:06:32]   [ 14/16] 000000000400.jpg          16.05s  ->  '{"found": true, "box": [708, 232, 804, 347]}'
+[16:06:48]   [ 15/16] 000000000490.jpg          15.89s  ->  '{"found": true, "box": [97, 387, 273, 677]}'
+[16:06:49]   [ 16/16] 000000000009.jpg           1.16s  ->  '{"found": false}'
+[16:06:49] {
+[16:06:49]   "model": "qwen3-vl:2b-instruct",
+[16:06:49]   "base_url": "http://127.0.0.1:11434/v1",
+[16:06:49]   "image_max_side": 448,
+[16:06:49]   "instruction": "the dog",
+[16:06:49]   "max_tokens": 512,
+[16:06:49]   "queries": 16,
+[16:06:49]   "errors": 0,
+[16:06:49]   "latency_s": {
+[16:06:49]     "mean": 9.591812499973457,
+[16:06:49]     "p50": 13.015499999979511,
+[16:06:49]     "p95": 16.733999999938533,
+[16:06:49]     "max": 16.875,
+[16:06:49]     "n": 16
+[16:06:49]   },
+[16:06:49]   "jpeg_encode_ms_mean": 5.161668756045401,
+[16:06:49]   "parse_success": 1.0,
+[16:06:49]   "prompt_tokens_mean": 1181.0,
+[16:06:49]   "completion_tokens_mean": 17.25,
+[16:06:49]   "found_accuracy": 1.0,
+[16:06:49]   "x_mae_norm": 0.005012500000000003,
+[16:06:49]   "x_mae_deg": 0.3458625000000002
+[16:06:49] }
+[16:06:49] wrote C:\Users\essaa\Downloads\NeuroDrone-Thesis\vlm_test\results\run_2026-10-13_1558\qwen3-vl_2b-instruct__dog.json
+[16:06:49] Running qwen2-5vl-3b-cpu on 'the person' (16 images)...
+[16:08:16]   [  1/16] 000000000025.jpg          40.08s  ->  '{"found": false}'
+[16:08:56]   [  2/16] 000000000030.jpg          39.52s  ->  '{"found": false}'
+[16:09:34]   [  3/16] 000000000034.jpg          38.27s  ->  '{"found": false}'
+[16:10:13]   [  4/16] 000000000036.jpg          38.75s  ->  '{"found": true, "box": [302, 254, 783, 1036]}'
+[16:10:51]   [  5/16] 000000000042.jpg          38.39s  ->  '{"found": false}'
+[16:11:30]   [  6/16] 000000000064.jpg          38.58s  ->  '{"found": false}'
+[16:12:10]   [  7/16] 000000000071.jpg          40.25s  ->  '{"found": false}'
+[16:12:51]   [  8/16] 000000000072.jpg          40.56s  ->  '{"found": false}'
+[16:13:33]   [  9/16] 000000000086.jpg          41.92s  ->  '{"found": true, "box": [234, 235, 438, 870]}'
+[16:14:16]   [ 10/16] 000000000294.jpg          43.51s  ->  '{"found": true, "box": [44, 125, 677, 752]}'
+[16:14:58]   [ 11/16] 000000000322.jpg          42.02s  ->  '{"found": true, "box": [119, 170, 458, 628]}`'
+[16:15:41]   [ 12/16] 000000000326.jpg          42.66s  ->  '{"found": true, "box": [260, 158, 886, 755]}'
+[16:16:23]   [ 13/16] 000000000370.jpg          41.83s  ->  '{"found": true, "box": [154, 45, 779, 1035]}'
+[16:17:05]   [ 14/16] 000000000397.jpg          41.89s  ->  '{"found": true, "box": [0, 0, 374, 320]}'
+[16:17:46]   [ 15/16] 000000000415.jpg          41.42s  ->  '{"found": true, "box": [0, 476, 231, 1044]}'
+[16:17:47]   [ 16/16] 000000000009.jpg           0.42s  ->  '{"found": false}'
+[16:17:47] {
+[16:17:47]   "model": "qwen2-5vl-3b-cpu",
+[16:17:47]   "base_url": "http://127.0.0.1:11434/v1",
+[16:17:47]   "image_max_side": 448,
+[16:17:47]   "instruction": "the person",
+[16:17:47]   "max_tokens": 512,
+[16:17:47]   "queries": 16,
+[16:17:47]   "errors": 0,
+[16:17:47]   "latency_s": {
+[16:17:47]     "mean": 38.12887499993667,
+[16:17:47]     "p50": 40.40650000004098,
+[16:17:47]     "p95": 42.87074999988545,
+[16:17:47]     "max": 43.514999999664724,
+[16:17:47]     "n": 16
+[16:17:47]   },
+[16:17:47]   "jpeg_encode_ms_mean": 4.72916872240603,
+[16:17:47]   "parse_success": 1.0,
+[16:17:47]   "prompt_tokens_mean": 1179.6875,
+[16:17:47]   "completion_tokens_mean": 17.25,
+[16:17:47]   "found_accuracy": 1.0,
+[16:17:47]   "x_mae_norm": 0.09155133928571428,
+[16:17:47]   "x_mae_deg": 6.3170424107142855
+[16:17:47] }
+[16:17:47] wrote C:\Users\essaa\Downloads\NeuroDrone-Thesis\vlm_test\results\run_2026-10-13_1558\qwen2-5vl-3b-cpu__person.json
+[16:17:47] Running qwen2-5vl-3b-cpu on 'the dog' (16 images)...
+[16:17:50]   [  1/16] 000000000025.jpg           1.75s  ->  '{"found": false}'
+[16:17:52]   [  2/16] 000000000030.jpg           1.73s  ->  '{"found": false}'
+[16:17:54]   [  3/16] 000000000034.jpg           1.70s  ->  '{"found": false}'
+[16:17:56]   [  4/16] 000000000036.jpg           1.70s  ->  '{"found": false}'
+[16:17:59]   [  5/16] 000000000042.jpg           3.08s  ->  '{"found": true, "box": [352, 69, 918, 487]}`'
+[16:18:40]   [  6/16] 000000000049.jpg          41.05s  ->  '{"found": false}'
+[16:19:20]   [  7/16] 000000000061.jpg          40.70s  ->  '{"found": false}'
+[16:19:22]   [  8/16] 000000000064.jpg           1.66s  ->  '{"found": false}'
+[16:20:06]   [  9/16] 000000000074.jpg          43.91s  ->  '{"found": true, "box": [112, 489, 609, 670]}`'
+[16:20:50]   [ 10/16] 000000000109.jpg          43.97s  ->  '{"found": true, "box": [970, 516, 1010, 542]}'
+[16:21:33]   [ 11/16] 000000000307.jpg          42.64s  ->  '{"found": true, "box": [657, 324, 938, 619]}'
+[16:22:15]   [ 12/16] 000000000309.jpg          42.42s  ->  '{"found": true, "box": [114, 317, 583, 754]}`'
+[16:22:58]   [ 13/16] 000000000394.jpg          43.33s  ->  '{"found": true, "box": [10, 26, 920, 832]}'
+[16:23:41]   [ 14/16] 000000000400.jpg          42.12s  ->  '{"found": true, "box": [632, 209, 725, 312]}'
+[16:24:22]   [ 15/16] 000000000490.jpg          41.81s  ->  '{"found": true, "box": [145, 349, 246, 609]}`'
+[16:24:23]   [ 16/16] 000000000009.jpg           0.41s  ->  '{"found": false}'
+[16:24:23] {
+[16:24:23]   "model": "qwen2-5vl-3b-cpu",
+[16:24:23]   "base_url": "http://127.0.0.1:11434/v1",
+[16:24:23]   "image_max_side": 448,
+[16:24:23]   "instruction": "the dog",
+[16:24:23]   "max_tokens": 512,
+[16:24:23]   "queries": 16,
+[16:24:23]   "errors": 0,
+[16:24:23]   "latency_s": {
+[16:24:23]     "mean": 24.62406249999185,
+[16:24:23]     "p50": 40.875,
+[16:24:23]     "p95": 43.92174999997951,
+[16:24:23]     "max": 43.96900000004098,
+[16:24:23]     "n": 16
+[16:24:23]   },
+[16:24:23]   "jpeg_encode_ms_mean": 3.7127062678337097,
+[16:24:23]   "parse_success": 1.0,
+[16:24:23]   "prompt_tokens_mean": 1177.0,
+[16:24:23]   "completion_tokens_mean": 17.625,
+[16:24:23]   "found_accuracy": 1.0,
+[16:24:23]   "x_mae_norm": 0.09148749999999999,
+[16:24:23]   "x_mae_deg": 6.312637499999999
+[16:24:23] }
+[16:24:23] wrote C:\Users\essaa\Downloads\NeuroDrone-Thesis\vlm_test\results\run_2026-10-13_1558\qwen2-5vl-3b-cpu__dog.json
+[16:24:23] All done. Results are in C:\Users\essaa\Downloads\NeuroDrone-Thesis\vlm_test\results\run_2026-10-13_1558
