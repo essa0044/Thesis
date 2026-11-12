@@ -1,0 +1,20 @@
+connected to PX4
+case wall seed 0
+   {'case': 'wall', 'seed': 0, 'outcome': 'stopped', 'start_ned': [-0.041, 0.253, -1.815], 'final_n': 5.676, 'final_e': -0.051, 'blocked_steps': 55, 'first_block_s': 7.91, 'gap_at_first_block_m': 2.24, 'final_gap_to_wall_m': 2.32, 'min_gap_to_wall_m': 1.91, 'pass': True}
+case wall seed 1
+   {'case': 'wall', 'seed': 1, 'outcome': 'stopped', 'start_ned': [5.628, 0.432, -1.806], 'final_n': 6.671, 'final_e': 0.534, 'blocked_steps': 61, 'first_block_s': 7.1, 'gap_at_first_block_m': 2.22, 'final_gap_to_wall_m': 1.33, 'min_gap_to_wall_m': 1.33, 'pass': True}
+case wall seed 2
+   {'case': 'wall', 'seed': 2, 'outcome': 'stopped', 'start_ned': [12.179, 0.706, -1.814], 'final_n': 6.689, 'final_e': -2.796, 'blocked_steps': 61, 'first_block_s': 8.88, 'gap_at_first_block_m': 2.24, 'final_gap_to_wall_m': 1.31, 'min_gap_to_wall_m': 1.56, 'pass': True}
+case free seed 0
+   {'case': 'free', 'seed': 0, 'outcome': 'reached', 'start_ned': [19.131, -1.952, -1.838], 'final_n': 7.028, 'final_e': 1.774, 'blocked_steps': 0, 'first_block_s': None, 'gap_at_first_block_m': None, 'final_gap_to_wall_m': None, 'min_gap_to_wall_m': None, 'pass': True}
+case free seed 1
+   {'case': 'free', 'seed': 1, 'outcome': 'reached', 'start_ned': [26.011, -0.545, -1.862], 'final_n': 7.043, 'final_e': -1.608, 'blocked_steps': 0, 'first_block_s': None, 'gap_at_first_block_m': None, 'final_gap_to_wall_m': None, 'min_gap_to_wall_m': None, 'pass': True}
+case free seed 2
+   {'case': 'free', 'seed': 2, 'outcome': 'reached', 'start_ned': [33.649, -2.587, -1.859], 'final_n': 6.902, 'final_e': 0.448, 'blocked_steps': 0, 'first_block_s': None, 'gap_at_first_block_m': None, 'final_gap_to_wall_m': None, 'min_gap_to_wall_m': None, 'pass': True}
+case beside seed 0
+   {'case': 'beside', 'seed': 0, 'outcome': 'reached', 'start_ned': [40.624, -1.716, -1.835], 'final_n': 7.063, 'final_e': -1.118, 'blocked_steps': 0, 'first_block_s': None, 'gap_at_first_block_m': None, 'final_gap_to_wall_m': None, 'min_gap_to_wall_m': None, 'pass': True}
+case beside seed 1
+   {'case': 'beside', 'seed': 1, 'outcome': 'reached', 'start_ned': [47.836, -3.01, -1.802], 'final_n': 6.77, 'final_e': -0.141, 'blocked_steps': 0, 'first_block_s': None, 'gap_at_first_block_m': None, 'final_gap_to_wall_m': None, 'min_gap_to_wall_m': None, 'pass': True}
+case beside seed 2
+   {'case': 'beside', 'seed': 2, 'outcome': 'reached', 'start_ned': [54.49, -3.621, -1.831], 'final_n': 7.528, 'final_e': 0.416, 'blocked_steps': 0, 'first_block_s': None, 'gap_at_first_block_m': None, 'final_gap_to_wall_m': None, 'min_gap_to_wall_m': None, 'pass': True}
+passed 9 of 9

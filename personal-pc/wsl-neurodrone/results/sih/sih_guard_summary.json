@@ -1,0 +1,194 @@
+{
+ "settings": {
+  "connect": "udpin://0.0.0.0:14540",
+  "out": "/home/claude/project/neurodrone/results/sih",
+  "cases": [
+   "wall",
+   "free",
+   "beside"
+  ],
+  "seeds": 3,
+  "alt": 2.0,
+  "speed": 1.0,
+  "rate": 20.0,
+  "wall_dist": 8.0,
+  "goal_dist": 6.0,
+  "radius": 0.6,
+  "stop_dist": 1.2,
+  "ttc": 2.0,
+  "max_time": 30.0
+ },
+ "versions": {
+  "python": "3.13.16",
+  "numpy": "2.5.3",
+  "mavsdk": "?",
+  "mavsdk_pkg": "3.17.4",
+  "px4": "v1.17.0",
+  "px4_commit": "d6f12ad1c4f70ad3230afd7d86e971421e02fef4",
+  "neurodrone_commit": null
+ },
+ "runs": [
+  {
+   "case": "wall",
+   "seed": 0,
+   "outcome": "stopped",
+   "start_ned": [
+    -0.041,
+    0.253,
+    -1.815
+   ],
+   "final_n": 5.676,
+   "final_e": -0.051,
+   "blocked_steps": 55,
+   "first_block_s": 7.91,
+   "gap_at_first_block_m": 2.24,
+   "final_gap_to_wall_m": 2.32,
+   "min_gap_to_wall_m": 1.91,
+   "pass": true
+  },
+  {
+   "case": "wall",
+   "seed": 1,
+   "outcome": "stopped",
+   "start_ned": [
+    5.628,
+    0.432,
+    -1.806
+   ],
+   "final_n": 6.671,
+   "final_e": 0.534,
+   "blocked_steps": 61,
+   "first_block_s": 7.1,
+   "gap_at_first_block_m": 2.22,
+   "final_gap_to_wall_m": 1.33,
+   "min_gap_to_wall_m": 1.33,
+   "pass": true
+  },
+  {
+   "case": "wall",
+   "seed": 2,
+   "outcome": "stopped",
+   "start_ned": [
+    12.179,
+    0.706,
+    -1.814
+   ],
+   "final_n": 6.689,
+   "final_e": -2.796,
+   "blocked_steps": 61,
+   "first_block_s": 8.88,
+   "gap_at_first_block_m": 2.24,
+   "final_gap_to_wall_m": 1.31,
+   "min_gap_to_wall_m": 1.56,
+   "pass": true
+  },
+  {
+   "case": "free",
+   "seed": 0,
+   "outcome": "reached",
+   "start_ned": [
+    19.131,
+    -1.952,
+    -1.838
+   ],
+   "final_n": 7.028,
+   "final_e": 1.774,
+   "blocked_steps": 0,
+   "first_block_s": null,
+   "gap_at_first_block_m": null,
+   "final_gap_to_wall_m": null,
+   "min_gap_to_wall_m": null,
+   "pass": true
+  },
+  {
+   "case": "free",
+   "seed": 1,
+   "outcome": "reached",
+   "start_ned": [
+    26.011,
+    -0.545,
+    -1.862
+   ],
+   "final_n": 7.043,
+   "final_e": -1.608,
+   "blocked_steps": 0,
+   "first_block_s": null,
+   "gap_at_first_block_m": null,
+   "final_gap_to_wall_m": null,
+   "min_gap_to_wall_m": null,
+   "pass": true
+  },
+  {
+   "case": "free",
+   "seed": 2,
+   "outcome": "reached",
+   "start_ned": [
+    33.649,
+    -2.587,
+    -1.859
+   ],
+   "final_n": 6.902,
+   "final_e": 0.448,
+   "blocked_steps": 0,
+   "first_block_s": null,
+   "gap_at_first_block_m": null,
+   "final_gap_to_wall_m": null,
+   "min_gap_to_wall_m": null,
+   "pass": true
+  },
+  {
+   "case": "beside",
+   "seed": 0,
+   "outcome": "reached",
+   "start_ned": [
+    40.624,
+    -1.716,
+    -1.835
+   ],
+   "final_n": 7.063,
+   "final_e": -1.118,
+   "blocked_steps": 0,
+   "first_block_s": null,
+   "gap_at_first_block_m": null,
+   "final_gap_to_wall_m": null,
+   "min_gap_to_wall_m": null,
+   "pass": true
+  },
+  {
+   "case": "beside",
+   "seed": 1,
+   "outcome": "reached",
+   "start_ned": [
+    47.836,
+    -3.01,
+    -1.802
+   ],
+   "final_n": 6.77,
+   "final_e": -0.141,
+   "blocked_steps": 0,
+   "first_block_s": null,
+   "gap_at_first_block_m": null,
+   "final_gap_to_wall_m": null,
+   "min_gap_to_wall_m": null,
+   "pass": true
+  },
+  {
+   "case": "beside",
+   "seed": 2,
+   "outcome": "reached",
+   "start_ned": [
+    54.49,
+    -3.621,
+    -1.831
+   ],
+   "final_n": 7.528,
+   "final_e": 0.416,
+   "blocked_steps": 0,
+   "first_block_s": null,
+   "gap_at_first_block_m": null,
+   "final_gap_to_wall_m": null,
+   "min_gap_to_wall_m": null,
+   "pass": true
+  }
+ ]
+}
