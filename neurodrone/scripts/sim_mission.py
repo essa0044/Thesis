@@ -33,13 +33,15 @@ from neurodrone.types import VehicleState, VelocityCmd
 from neurodrone.vlm import build_prompt, encode_jpeg, parse_goal
 
 
-def ask_ollama(url, model, jpeg, instruction, timeout=240, num_ctx=2048):
+def ask_ollama(url, model, jpeg, instruction, timeout=240, num_ctx=2048, num_gpu=None):
     """One VLM call. num_ctx must be the same in every call (and in scripts/vlm_warmup.py): a different value makes
     Ollama reload the model. The timeout is long on purpose: when the client gives up, Ollama still finishes that
     request, so the next one waits behind it and times out too."""
     body = {"model": model, "stream": False, "think": False, "keep_alive": "60m",
             "options": {"temperature": 0, "num_predict": 128, "num_ctx": num_ctx},
             "messages": [{"role": "user", "content": build_prompt(instruction), "images": [base64.b64encode(jpeg).decode()]}]}
+    if num_gpu is not None:  # model layers on the GPU (0 = CPU only); must match the load, or Ollama reloads
+        body["options"]["num_gpu"] = int(num_gpu)
     req = urllib.request.Request(url.rstrip("/") + "/api/chat", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
     t0 = time.monotonic()
     try:
@@ -83,7 +85,8 @@ class VlmWorker(threading.Thread):
             try:
                 text, lat = ask_ollama(self.a.ollama, self.a.model, jpeg, self.a.instruction,
                                        timeout=getattr(self.a, "vlm_timeout", 240.0),
-                                       num_ctx=getattr(self.a, "num_ctx", 2048))
+                                       num_ctx=getattr(self.a, "num_ctx", 2048),
+                                       num_gpu=getattr(self.a, "num_gpu", None))
             except Exception as e:  # noqa: BLE001
                 self.log.log("vlm_error", error=repr(e)[:300])
                 print(f"[vlm] error: {e!r}", flush=True)
@@ -234,6 +237,8 @@ def main():
     ap.add_argument("--max-side", type=int, default=896)
     ap.add_argument("--vlm-timeout", type=float, default=240.0, help="s to wait for one VLM answer")
     ap.add_argument("--num-ctx", type=int, default=2048, help="Ollama context length (smaller = less GPU memory)")
+    ap.add_argument("--num-gpu", type=int, default=None,
+                    help="model layers Ollama puts on the GPU (0 = CPU only; default: Ollama decides)")
     ap.add_argument("--standoff", type=float, default=1.5, help="stop this far before the target (m)")
     ap.add_argument("--radius", type=float, default=0.8,
                     help="guard corridor radius from the drone's centre (m); X500 propeller tips reach ~0.4 m")

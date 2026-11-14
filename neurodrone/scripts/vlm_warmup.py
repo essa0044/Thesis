@@ -52,6 +52,7 @@ def main(argv=None):
     ap.add_argument("--model", default="qwen3-vl:4b-instruct")
     ap.add_argument("--num-ctx", type=int, default=2048)
     ap.add_argument("--max-side", type=int, default=896)
+    ap.add_argument("--num-gpu", type=int, default=None, help="model layers on the GPU (0 = CPU only)")
     ap.add_argument("--calls", type=int, default=3)
     ap.add_argument("--no-reload", action="store_true", help="time the model as it is loaded now")
     ap.add_argument("--max-median", type=float, default=None, help="exit 1 if the median call takes longer (s)")
@@ -61,8 +62,10 @@ def main(argv=None):
         post(base + "/api/generate", {"model": a.model, "keep_alive": 0})
         time.sleep(2)
         t0 = time.monotonic()
-        post(base + "/api/generate", {"model": a.model, "keep_alive": "60m", "prompt": "",
-                                      "options": {"num_ctx": a.num_ctx}})
+        opts = {"num_ctx": a.num_ctx}
+        if a.num_gpu is not None:
+            opts["num_gpu"] = a.num_gpu
+        post(base + "/api/generate", {"model": a.model, "keep_alive": "60m", "prompt": "", "options": opts})
         print(f"model loaded in {time.monotonic() - t0:.1f} s", flush=True)
     share, size = gpu_share(base, a.model)
     if share is not None:
@@ -70,12 +73,13 @@ def main(argv=None):
     jpeg, _ = encode_jpeg(test_image(), max_side=a.max_side, quality=90)
     lat = []
     for i in range(a.calls):
-        text, t = ask_ollama(a.ollama, a.model, jpeg, "the red box", num_ctx=a.num_ctx)
+        text, t = ask_ollama(a.ollama, a.model, jpeg, "the red box", num_ctx=a.num_ctx, num_gpu=a.num_gpu)
         lat.append(t)
         print(f"call {i + 1}: {t:.1f} s  {text.strip()[:80]}", flush=True)
     med = statistics.median(lat)
     print(f"median {med:.1f} s", flush=True)
     print(json.dumps(dict(gpu_share=share, size_bytes=size, latencies_s=[round(x, 2) for x in lat], num_ctx=a.num_ctx,
+                          num_gpu=a.num_gpu,
                           max_side=a.max_side, model=a.model)))
     if a.max_median is not None and med > a.max_median:
         print(f"TOO SLOW: median {med:.1f} s > {a.max_median} s", flush=True)

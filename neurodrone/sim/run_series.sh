@@ -26,7 +26,9 @@ MAX_TIME="${MAX_TIME:-180}"
 SEARCH_YAW="${SEARCH_YAW:-20}"  # deg/s turn rate of the turn-stop-look search while no goal is accepted
 SEARCH="${SEARCH:-sweep}"       # sweep (fixed headings) or active (active sensing: the answers pick the next view)
 NUM_CTX="${NUM_CTX:-2048}"      # same in the warm-up and every call, or Ollama reloads the model
-VLM_MAX_MEDIAN="${VLM_MAX_MEDIAN:-30}"  # stop before the series if a VLM call takes longer than this (s)   # deg/s turn while no goal is accepted (the barrel and green box are near the view's edge)
+NUM_GPU="${NUM_GPU:-}"          # model layers on the GPU (0 = CPU only); empty = Ollama decides
+GPU_ARG=(); [ -n "$NUM_GPU" ] && GPU_ARG=(--num-gpu "$NUM_GPU")
+VLM_MAX_MEDIAN="${VLM_MAX_MEDIAN:-30}"  # stop before the series if a VLM call takes longer than this (s)
 
 mkdir -p "$OUT/px4" "$OUT/frames"
 cp "$KIT"/sim/worlds/nd_*.sdf "$PX4_DIR/Tools/simulation/gz/worlds/"
@@ -35,7 +37,7 @@ curl -s --max-time 5 "$OLLAMA/api/version" >/dev/null || { echo "no Ollama at $O
   echo "date: $(date -Is)"; echo "neurodrone commit: $(git -C "$KIT" rev-parse HEAD 2>/dev/null)"
   echo "px4: $(git -C "$PX4_DIR" describe --tags --always)"; echo "gazebo: $(gz sim --versions 2>/dev/null | tail -1)"
   echo "ollama: $(curl -s "$OLLAMA/api/version")"; echo "model: $MODEL"
-  echo "runs: $RUNS  worlds: $WORLDS  targets: $TARGETS  max_time: $MAX_TIME  search: $SEARCH  search_yaw: $SEARCH_YAW  headless: $HEADLESS"
+  echo "runs: $RUNS  worlds: $WORLDS  targets: $TARGETS  max_time: $MAX_TIME  search: $SEARCH  num_gpu: ${NUM_GPU:-auto}  search_yaw: $SEARCH_YAW  headless: $HEADLESS"
   command -v nvidia-smi >/dev/null && nvidia-smi --query-gpu=name,driver_version --format=csv,noheader
 } > "$OUT/run_info.txt"
 cat "$OUT/run_info.txt"
@@ -71,7 +73,7 @@ mirror() { [ -n "$MIRROR" ] && mkdir -p "$MIRROR" && cp -r "$OUT" "$MIRROR/" 2>/
 vlm_check() {  # $1 = run name, $2.. = extra args
   local f="$OUT/vlm/$1.txt"; shift
   ( cd "$KIT" && "$VENV/bin/python" scripts/vlm_warmup.py --ollama "$OLLAMA" --model "$MODEL" --num-ctx "$NUM_CTX" \
-      --max-median "$VLM_MAX_MEDIAN" "$@" ) >> "$f" 2>&1
+      --max-median "$VLM_MAX_MEDIAN" "${GPU_ARG[@]}" "$@" ) >> "$f" 2>&1
 }
 loaded=0
 mirror  # visible in Windows right away
@@ -101,7 +103,7 @@ for i in $(seq 1 "$RUNS"); do
       echo "VLM check: $(grep -E '^(on the GPU|median|TOO SLOW)' "$OUT/vlm/$name.txt" | tr '\n' ' ')"
       mirror
       ( cd "$KIT" && timeout $(( MAX_TIME + 120 )) "$VENV/bin/python" scripts/sim_mission.py --instruction "$t" \
-          --ollama "$OLLAMA" --model "$MODEL" --max-time "$MAX_TIME" --search-yaw "$SEARCH_YAW" --search "$SEARCH" --num-ctx "$NUM_CTX" \
+          --ollama "$OLLAMA" --model "$MODEL" --max-time "$MAX_TIME" --search-yaw "$SEARCH_YAW" --search "$SEARCH" --num-ctx "$NUM_CTX" "${GPU_ARG[@]}" \
           --log "$OUT/$name.jsonl" --save-frames "$OUT/frames/$name" ) 2>&1 \
         | grep -v -E "FutureWarning|mavsdk-grpc|To carry on|To freeze|To migrate|_bootstrap" | tail -4
       sleep 8  # landing
