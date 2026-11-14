@@ -51,16 +51,23 @@ summary() {
 }
 trap 'echo; echo "interrupted"; cleanup; summary; exit 130' INT TERM
 
-# Load the VLM before any Gazebo runs, so Ollama can put as much of it on the GPU as possible, and time it.
+# The VLM is (re)loaded AFTER Gazebo is up. Loaded before Gazebo (14 Nov), Ollama took about half of the laptop's 4 GB
+# GPU memory, Gazebo then needed its share too, and no VLM call finished within 180 s while the simulation ran.
+# Loaded while Gazebo runs, Ollama only takes what is free. Every run checks the VLM speed (vlm/<run>.txt); if a run's
+# check is slower than VLM_MAX_MEDIAN, the model is reloaded once more. Unload it now so it is not in Gazebo's way.
 cleanup
-echo; echo "=== VLM warm-up (no Gazebo running)"
-( cd "$KIT" && "$VENV/bin/python" scripts/vlm_warmup.py --ollama "$OLLAMA" --model "$MODEL" --num-ctx "$NUM_CTX" \
-    --max-median "$VLM_MAX_MEDIAN" ) | tee -a "$OUT/run_info.txt"
-if [ "${PIPESTATUS[0]}" != 0 ]; then
-  echo "The VLM is too slow for the series (see above). Close other programs that use the GPU (games, browsers with"
-  echo "video, a running Gazebo) and run again, or allow more: VLM_MAX_MEDIAN=60 bash sim/run_series.sh"
-  exit 1
-fi
+curl -s "$OLLAMA/api/generate" -d "{\"model\": \"$MODEL\", \"keep_alive\": 0}" >/dev/null
+mkdir -p "$OUT/vlm"
+# copy of the results in the Windows Downloads folder after every run (for reading them from Windows)
+MIRROR="${MIRROR:-}"
+if [ -z "$MIRROR" ] && [ -d "/mnt/c/Users/$USER/Downloads" ]; then MIRROR="/mnt/c/Users/$USER/Downloads/series_auto"; fi
+mirror() { [ -n "$MIRROR" ] && mkdir -p "$MIRROR" && cp -r "$OUT" "$MIRROR/" 2>/dev/null; true; }
+vlm_check() {  # $1 = run name, $2.. = extra args
+  local f="$OUT/vlm/$1.txt"; shift
+  ( cd "$KIT" && "$VENV/bin/python" scripts/vlm_warmup.py --ollama "$OLLAMA" --model "$MODEL" --num-ctx "$NUM_CTX" \
+      --max-median "$VLM_MAX_MEDIAN" "$@" ) >> "$f" 2>&1
+}
+loaded=0
 
 IFS=';' read -r -a TLIST <<< "$TARGETS"
 n=0; total=$(( RUNS * $(wc -w <<< "$WORLDS") * ${#TLIST[@]} ))
@@ -78,14 +85,23 @@ for i in $(seq 1 "$RUNS"); do
       done
       if [ $ok = 0 ]; then echo "PX4 not ready after 120 s - skipped (see $OUT/px4/$name.log)"; continue; fi
       sleep 5  # let the estimator settle
+      if [ $loaded = 0 ]; then
+        vlm_check "$name" --calls 2 && loaded=1
+      else
+        vlm_check "$name" --no-reload --calls 1 || vlm_check "$name" --calls 2
+      fi
+      loaded=1
+      echo "VLM check: $(grep -E '^(on the GPU|median|TOO SLOW)' "$OUT/vlm/$name.txt" | tr '\n' ' ')"
       ( cd "$KIT" && timeout $(( MAX_TIME + 120 )) "$VENV/bin/python" scripts/sim_mission.py --instruction "$t" \
           --ollama "$OLLAMA" --model "$MODEL" --max-time "$MAX_TIME" --search-yaw "$SEARCH_YAW" --search "$SEARCH" --num-ctx "$NUM_CTX" \
           --log "$OUT/$name.jsonl" --save-frames "$OUT/frames/$name" ) 2>&1 \
         | grep -v -E "FutureWarning|mavsdk-grpc|To carry on|To freeze|To migrate|_bootstrap" | tail -4
       sleep 8  # landing
+      summary >/dev/null 2>&1; mirror
     done
   done
 done
 cleanup
 echo; echo "=== all runs done: $OUT"
 summary
+mirror
