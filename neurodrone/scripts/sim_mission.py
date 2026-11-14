@@ -100,7 +100,7 @@ class VlmWorker(threading.Thread):
             if acc is not None:
                 self.goal = acc
             self.last = dict(found=bool(p and p.found), box=box, dist=dist, latency_s=lat, accepted=acc is not None,
-                             t_capture=t_capture)
+                             t_capture=t_capture, yaw_capture=getattr(state, "yaw_deg", None))
             self.log.log("vlm", text=text[:300], box=box, dist_m=dist, goal=None if goal is None else goal.tolist(),
                          accepted=None if acc is None else acc.tolist(), latency_s=lat, rgb_age_s=age)
             print(f"[vlm] {lat:.2f} s  found={self.last['found']}  dist={dist if dist is None else round(dist, 2)}  "
@@ -156,7 +156,12 @@ async def main_async(a):
     t_start = time.monotonic()
     outcome = "error"
     log.log("offboard", alt_m=a.alt)
-    searcher = M.Searcher(max_rate=a.search_yaw) if a.search_yaw else None
+    if not a.search_yaw:
+        searcher = None
+    elif a.search == "active":
+        searcher = M.ActiveSearcher(max_rate=a.search_yaw)
+    else:
+        searcher = M.Searcher(max_rate=a.search_yaw)
     avoider = M.Avoider(max_angle_deg=a.avoid_angle, speed=a.avoid_speed)
     dt = 1.0 / a.rate
     last_print = 0.0
@@ -241,6 +246,8 @@ def main():
     ap.add_argument("--consensus-window", type=int, default=3)
     ap.add_argument("--consensus-tol", type=float, default=1.5)
     ap.add_argument("--search-yaw", type=float, default=0.0, help="while no goal is accepted: turn-stop-look search, turning at up to this many deg/s (0 = just hover)")
+    ap.add_argument("--search", choices=["sweep", "active"], default="sweep",
+                    help="sweep: fixed list of headings; active: the VLM answers choose the next view (active sensing)")
     ap.add_argument("--hover-s", type=float, default=3.0, help="hover this long at the goal, then land")
     ap.add_argument("--max-time", type=float, default=180.0, help="give up and land after this many s in OFFBOARD")
     ap.add_argument("--no-fly", action="store_true")

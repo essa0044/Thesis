@@ -62,5 +62,5 @@ def test_summary_table(tmp_path, capsys):
         _write_log(tmp_path / f"r{i}.jsonl")
     assert A.main([str(tmp_path / "*.jsonl"), "--worlds", WORLDS, "--out", str(tmp_path / "sum")]) == 0
     out = capsys.readouterr().out
-    assert "| nd_obstacles | the red box | 3 | 3/3 |" in out
+    assert "| nd_obstacles | the red box | sweep | 3 | 3/3 |" in out
     assert (tmp_path / "sum.csv").exists() and (tmp_path / "sum.json").exists()

@@ -88,6 +88,7 @@ def analyze_run(path, worlds_dir):
     world = start.get("world")
     instr = start.get("instruction") or (start.get("settings") or {}).get("instruction", "")
     res = dict(run=os.path.basename(path), world=world, instruction=instr,
+               search=(start.get("settings") or {}).get("search", "sweep"),
                outcome=end["outcome"] if end else "error")
     t0 = off["t"] if off else (ctl[0]["t"] if ctl else None)
     wpath = os.path.join(worlds_dir, f"{world}.sdf") if world else None
@@ -136,9 +137,9 @@ def analyze_run(path, worlds_dir):
 def summarize(runs):
     groups = {}
     for r in runs:
-        groups.setdefault((r["world"], r["instruction"]), []).append(r)
+        groups.setdefault((r["world"], r["instruction"], r["search"]), []).append(r)
     out = []
-    for (world, instr), rs in sorted(groups.items(), key=lambda kv: (str(kv[0][0]), str(kv[0][1]))):
+    for (world, instr, search), rs in sorted(groups.items(), key=lambda kv: tuple(str(x) for x in kv[0])):
         def med(k):
             v = [r[k] for r in rs if r[k] is not None]
             return round(statistics.median(v), 2) if v else None
@@ -147,7 +148,7 @@ def summarize(runs):
             v = [r[k] for r in rs if r[k] is not None]
             return round(min(v), 2) if v else None
         lat = [r["vlm_median_s"] for r in rs if r["vlm_median_s"] is not None]
-        out.append(dict(world=world, instruction=instr, runs=len(rs), success=sum(r["success"] for r in rs),
+        out.append(dict(world=world, instruction=instr, search=search, runs=len(rs), success=sum(r["success"] for r in rs),
                         arrived=sum(r["outcome"] == "arrived" for r in rs),
                         right_target=sum(bool(r["right_target"]) for r in rs),
                         t_arrive_median_s=med("t_arrive_s"), standoff_median_m=med("standoff_m"),
@@ -157,12 +158,12 @@ def summarize(runs):
 
 
 def markdown(groups):
-    head = ["world", "target", "runs", "success", "arrived", "right target", "time to goal (s, median)",
+    head = ["world", "target", "search", "runs", "success", "arrived", "right target", "time to goal (s, median)",
             "stand-off (m, median)", "min prop clearance (m)", "going around (s, median)", "VLM latency (s, median)"]
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for g in groups:
         f = lambda v: "–" if v is None else str(v)  # noqa: E731
-        lines.append("| " + " | ".join([f(g["world"]), f(g["instruction"]), f(g["runs"]),
+        lines.append("| " + " | ".join([f(g["world"]), f(g["instruction"]), f(g["search"]), f(g["runs"]),
                                          f"{g['success']}/{g['runs']}", f"{g['arrived']}/{g['runs']}",
                                          f"{g['right_target']}/{g['runs']}", f(g["t_arrive_median_s"]),
                                          f(g["standoff_median_m"]), f(g["prop_clear_min_m"]),

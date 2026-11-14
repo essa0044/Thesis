@@ -153,3 +153,35 @@ def test_searcher_wraps_around_north():
     s.step(170.0, 5.0, dict(found=False, t_capture=1.0))  # -> +30 = 200 = -160
     yr, note = s.step(170.0, 5.1, None)
     assert yr > 0 and "+30" in note  # short way (clockwise through 180), not 330 deg back
+
+
+def test_active_searcher_skips_seen_views_and_centres_a_found_box():
+    from neurodrone.mission import ActiveSearcher
+    s = ActiveSearcher(max_rate=20.0)
+    yr, _ = s.step(90.0, now=0.0, last=None)  # settles on the start heading
+    assert yr == 0 and s.settled_at == 0.0
+    # nothing at 90 deg -> the next view is a neighbouring, unseen direction, not the one just seen
+    yr, note = s.step(90.0, now=6.0, last=dict(found=False, box=None, t_capture=0.5, yaw_capture=90.0))
+    assert abs(((s.target - 90.0 + 180) % 360) - 180) >= 34.5 and yr != 0
+    assert s.belief[s._in_view(90.0)].sum() < s.belief[s._in_view(270.0)].sum()
+    # turn there, settle, then the target is found near the right edge -> turn to centre it
+    h = s.target
+    s.step(h, now=8.0, last=None)
+    yr, _ = s.step(h, now=14.0, last=dict(found=True, box=[0.85, 0.4, 0.95, 0.6], t_capture=8.5, yaw_capture=h))
+    assert yr > 0 and 20.0 < ((s.target - h) % 360) < 34.5  # box right of centre -> turn clockwise towards it
+    # centred and found again -> stay
+    c = s.target
+    s.step(c, now=16.0, last=None)
+    yr, note = s.step(c, now=22.0, last=dict(found=True, box=[0.45, 0.4, 0.55, 0.6], t_capture=16.5, yaw_capture=c))
+    assert yr == 0 and "looking" in note
+
+
+def test_active_searcher_answer_used_once():
+    from neurodrone.mission import ActiveSearcher
+    s = ActiveSearcher()
+    s.step(0.0, 0.0, None)
+    ans = dict(found=False, box=None, t_capture=1.0, yaw_capture=0.0)
+    s.step(0.0, 5.0, ans)
+    b = s.belief.copy()
+    s.step(s.target, 6.0, ans)  # same answer again: no second update
+    assert (s.belief == b).all()

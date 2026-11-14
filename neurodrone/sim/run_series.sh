@@ -4,6 +4,7 @@
 #   cd ~/Thesis/neurodrone && bash sim/run_series.sh                 # 3 targets x 2 worlds x 5 runs = 30 runs
 #   RUNS=1 bash sim/run_series.sh                                    # quick check: 6 runs
 #   HEADLESS=1 bash sim/run_series.sh                                # no Gazebo window (less GPU load)
+#   SEARCH=active bash sim/run_series.sh                             # active-sensing search instead of the fixed sweep
 #   TARGETS="the red box" WORLDS=nd_obstacles RUNS=3 bash sim/run_series.sh
 #
 # Needs: sim/setup_sim_ubuntu.sh done once (PX4 built, ~/nd-venv), Ollama reachable at OLLAMA (default
@@ -19,10 +20,11 @@ MODEL="${MODEL:-qwen3-vl:4b-instruct}"
 RUNS="${RUNS:-5}"
 WORLDS="${WORLDS:-nd_test nd_obstacles}"
 TARGETS="${TARGETS:-the red box;the blue barrel;the green box}"
-OUT="${OUT:-$KIT/results/series/$(date +%Y%m%d_%H%M)}"
+OUT="${OUT:-$KIT/results/series/$(date +%Y%m%d_%H%M)_${SEARCH:-sweep}}"
 HEADLESS="${HEADLESS:-0}"
 MAX_TIME="${MAX_TIME:-180}"
 SEARCH_YAW="${SEARCH_YAW:-20}"  # deg/s turn rate of the turn-stop-look search while no goal is accepted
+SEARCH="${SEARCH:-sweep}"       # sweep (fixed headings) or active (active sensing: the answers pick the next view)
 NUM_CTX="${NUM_CTX:-2048}"      # same in the warm-up and every call, or Ollama reloads the model
 VLM_MAX_MEDIAN="${VLM_MAX_MEDIAN:-30}"  # stop before the series if a VLM call takes longer than this (s)   # deg/s turn while no goal is accepted (the barrel and green box are near the view's edge)
 
@@ -33,7 +35,7 @@ curl -s --max-time 5 "$OLLAMA/api/version" >/dev/null || { echo "no Ollama at $O
   echo "date: $(date -Is)"; echo "neurodrone commit: $(git -C "$KIT" rev-parse HEAD 2>/dev/null)"
   echo "px4: $(git -C "$PX4_DIR" describe --tags --always)"; echo "gazebo: $(gz sim --versions 2>/dev/null | tail -1)"
   echo "ollama: $(curl -s "$OLLAMA/api/version")"; echo "model: $MODEL"
-  echo "runs: $RUNS  worlds: $WORLDS  targets: $TARGETS  max_time: $MAX_TIME  search_yaw: $SEARCH_YAW  headless: $HEADLESS"
+  echo "runs: $RUNS  worlds: $WORLDS  targets: $TARGETS  max_time: $MAX_TIME  search: $SEARCH  search_yaw: $SEARCH_YAW  headless: $HEADLESS"
   command -v nvidia-smi >/dev/null && nvidia-smi --query-gpu=name,driver_version --format=csv,noheader
 } > "$OUT/run_info.txt"
 cat "$OUT/run_info.txt"
@@ -77,7 +79,7 @@ for i in $(seq 1 "$RUNS"); do
       if [ $ok = 0 ]; then echo "PX4 not ready after 120 s - skipped (see $OUT/px4/$name.log)"; continue; fi
       sleep 5  # let the estimator settle
       ( cd "$KIT" && timeout $(( MAX_TIME + 120 )) "$VENV/bin/python" scripts/sim_mission.py --instruction "$t" \
-          --ollama "$OLLAMA" --model "$MODEL" --max-time "$MAX_TIME" --search-yaw "$SEARCH_YAW" --num-ctx "$NUM_CTX" \
+          --ollama "$OLLAMA" --model "$MODEL" --max-time "$MAX_TIME" --search-yaw "$SEARCH_YAW" --search "$SEARCH" --num-ctx "$NUM_CTX" \
           --log "$OUT/$name.jsonl" --save-frames "$OUT/frames/$name" ) 2>&1 \
         | grep -v -E "FutureWarning|mavsdk-grpc|To carry on|To freeze|To migrate|_bootstrap" | tail -4
       sleep 8  # landing

@@ -291,3 +291,93 @@ class Searcher:
                 return 0.0, f"nothing at {off:+.0f} deg, next view"
             return 0.0, f"found at {off:+.0f} deg, waiting for agreement"
         return 0.0, f"looking at {off:+.0f} deg"
+
+
+@dataclass
+class ActiveSearcher:
+    """Active-sensing search: the VLM answers decide where to look next (the baseline Searcher sweeps a fixed list).
+
+    Belief: probability that the target lies in each of `bins` directions (world bearing, uniform at the start).
+    Each answer, for a picture taken at heading psi:
+      * nothing found -> the directions inside the camera's view are multiplied by p_miss (the VLM sometimes misses,
+        so they are not ruled out), then the belief is normalised;
+      * found -> the direction of the box centre gets the belief mass (`p_hit` of it; the rest stays spread, as the
+        VLM can name the wrong object), and the next look is turned so that the box is in the middle of the picture.
+        The confirming answer then comes from a different picture, not a copy of the first one.
+    Next view when nothing is found: the heading whose view holds the most belief, minus turn_cost per 180 deg of turn.
+    Holds still until an answer for a picture taken after the last turn has arrived, like Searcher."""
+    hfov_deg: float = 69.0  # RGB camera (IMX214 in Gazebo: 1.204 rad); the RealSense D435i colour camera is also ~69 deg
+    bins: int = 36
+    p_miss: float = 0.3
+    p_hit: float = 0.8
+    turn_cost: float = 0.15
+    max_rate: float = 20.0
+    k_yaw: float = 1.5
+    tol_deg: float = 3.0
+    center_tol_deg: float = 8.0
+    belief: Optional[np.ndarray] = None
+    target: Optional[float] = None
+    settled_at: Optional[float] = None
+    seen: Optional[float] = None  # t_capture of the last answer used
+
+    def _centers(self) -> np.ndarray:
+        return (np.arange(self.bins) + 0.5) * 360.0 / self.bins
+
+    @staticmethod
+    def _wrap(a):
+        return (np.asarray(a) + 180.0) % 360.0 - 180.0
+
+    def _in_view(self, heading: float) -> np.ndarray:
+        return np.abs(self._wrap(self._centers() - heading)) <= self.hfov_deg / 2
+
+    def box_bearing(self, box, heading: float) -> float:
+        """World bearing (deg) of the centre of a normalised box [x1, y1, x2, y2] seen at `heading`."""
+        u = (box[0] + box[2]) / 2.0
+        half = math.radians(self.hfov_deg / 2)
+        return heading + math.degrees(math.atan((2 * u - 1) * math.tan(half)))
+
+    def update(self, found: bool, heading: float, box=None) -> None:
+        if self.belief is None:
+            self.belief = np.full(self.bins, 1.0 / self.bins)
+        if found and box is not None:
+            b = self.box_bearing(box, heading)
+            near = np.abs(self._wrap(self._centers() - b)) <= 360.0 / self.bins
+            self.belief = (1 - self.p_hit) * self.belief + self.p_hit * near / near.sum()
+            self.target = float(self._wrap(b) % 360.0)
+        else:
+            self.belief = np.where(self._in_view(heading), self.belief * self.p_miss, self.belief)
+            self.belief /= self.belief.sum()
+            self.target = self.next_view(heading)
+
+    def next_view(self, heading: float) -> float:
+        best, best_score = heading, -1e9
+        for h in self._centers():
+            turn = abs(float(self._wrap(h - heading)))
+            score = float(self.belief[self._in_view(h)].sum()) - self.turn_cost * turn / 180.0
+            if turn < self.hfov_deg / 4:  # (almost) the view just seen: no new information
+                score -= 1.0
+            if score > best_score:
+                best, best_score = float(h), score
+        return best
+
+    def step(self, yaw_deg: float, now: float, last: Optional[dict]):
+        """-> (yaw_rate deg/s, note). last: newest VLM answer with found, box, t_capture and yaw_capture."""
+        if self.belief is None:
+            self.belief = np.full(self.bins, 1.0 / self.bins)
+        if self.target is None:
+            self.target = yaw_deg % 360.0
+        fresh = (last is not None and last.get("t_capture") is not None and last.get("yaw_capture") is not None
+                 and self.settled_at is not None and last["t_capture"] >= self.settled_at
+                 and (self.seen is None or last["t_capture"] > self.seen))
+        if fresh:
+            self.seen = last["t_capture"]
+            self.update(bool(last.get("found")), float(last["yaw_capture"]), last.get("box"))
+            if last.get("found") and abs(float(self._wrap(self.target - yaw_deg))) <= self.center_tol_deg:
+                self.target = yaw_deg % 360.0  # already centred: stay and let the consensus confirm
+        err = float(self._wrap(self.target - yaw_deg))
+        if abs(err) > self.tol_deg:
+            self.settled_at = None
+            return max(-self.max_rate, min(self.max_rate, self.k_yaw * err)), f"turning to {self.target:.0f} deg"
+        if self.settled_at is None:
+            self.settled_at = now
+        return 0.0, f"looking at {self.target:.0f} deg (best view {100 * float(self.belief[self._in_view(yaw_deg)].sum()):.0f} %)"
