@@ -1,0 +1,13 @@
+run,world,instruction,search,outcome,t_goal_s,t_arrive_s,duration_s,standoff_m,right_target,pole_surface_m,prop_clear_m,blocked_s,avoid_s,vlm_n,vlm_found,vlm_first_s,vlm_median_s,vlm_p90_s,success
+nd_obstacles__blue_barrel__1.jsonl,nd_obstacles,the blue barrel,sweep,timeout,158.9,,180.01,4.68,True,1.01,0.59,0.0,7.1,3,1.0,53.43,52.64,52.7,False
+nd_obstacles__blue_barrel__2.jsonl,nd_obstacles,the blue barrel,sweep,arrived,112.9,152.6,155.61,1.96,True,0.86,0.44,3.6,4.2,2,1.0,57.51,55.26,55.26,True
+nd_obstacles__green_box__1.jsonl,nd_obstacles,the green box,sweep,arrived,102.3,119.1,122.1,5.91,True,1.75,1.33,0.0,0.0,2,1.0,51.11,51.01,51.01,False
+nd_obstacles__green_box__2.jsonl,nd_obstacles,the green box,sweep,arrived,110.0,126.6,129.56,5.96,True,1.8,1.38,0.0,0.0,2,1.0,54.78,54.92,54.92,False
+nd_obstacles__red_box__1.jsonl,nd_obstacles,the red box,sweep,arrived,106.1,138.3,141.28,1.96,True,0.97,0.55,0.0,7.3,2,1.0,54.16,51.83,51.83,True
+nd_obstacles__red_box__2.jsonl,nd_obstacles,the red box,sweep,timeout,125.1,,180.34,4.39,True,0.92,0.5,0.1,6.7,2,1.0,57.81,67.06,67.06,False
+nd_test__blue_barrel__1.jsonl,nd_test,the blue barrel,sweep,arrived,103.2,130.8,133.77,1.82,True,,,0.0,0.0,2,1.0,51.42,51.61,51.61,True
+nd_test__blue_barrel__2.jsonl,nd_test,the blue barrel,sweep,error,,,,,,,,0.0,0.0,0,,,,,False
+nd_test__green_box__1.jsonl,nd_test,the green box,sweep,arrived,106.1,138.2,141.25,1.57,True,,,0.0,0.0,2,1.0,52.98,52.98,52.98,True
+nd_test__green_box__2.jsonl,nd_test,the green box,sweep,arrived,123.3,155.1,158.13,1.69,True,,,0.0,0.0,2,1.0,66.11,57.0,57.0,True
+nd_test__red_box__1.jsonl,nd_test,the red box,sweep,arrived,106.1,134.9,137.91,1.9,True,,,0.0,0.0,2,1.0,53.46,52.47,52.47,True
+nd_test__red_box__2.jsonl,nd_test,the red box,sweep,timeout,150.3,,180.02,8.2,False,,,14.7,0.7,2,1.0,77.61,63.13,63.13,False

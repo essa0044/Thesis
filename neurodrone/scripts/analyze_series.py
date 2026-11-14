@@ -97,6 +97,8 @@ def analyze_run(path, worlds_dir):
     targets = {k: v for k, v in objects.items() if "pole" not in k}
     tname = target_name(instr, objects)
     acc = [r for r in vlm if r.get("accepted")]
+    if off is None:  # never reached OFFBOARD: takeoff or arming failed in the simulator, not the stack
+        res["outcome"] = "sim_error"
     res["t_goal_s"] = round(acc[0]["t"] - t0, 1) if acc and t0 is not None else None
     arr = [r for r in ctl if r.get("phase") == "arrived"]
     res["t_arrive_s"] = round(arr[0]["t"] - t0, 1) if arr and t0 is not None else None
@@ -139,7 +141,14 @@ def summarize(runs):
     for r in runs:
         groups.setdefault((r["world"], r["instruction"], r["search"]), []).append(r)
     out = []
-    for (world, instr, search), rs in sorted(groups.items(), key=lambda kv: tuple(str(x) for x in kv[0])):
+    for (world, instr, search), rs_all in sorted(groups.items(), key=lambda kv: tuple(str(x) for x in kv[0])):
+        rs = [r for r in rs_all if r["outcome"] != "sim_error"]
+        if not rs:
+            out.append(dict(world=world, instruction=instr, search=search, runs=0, success=0, arrived=0, right_target=0,
+                            t_arrive_median_s=None, standoff_median_m=None, prop_clear_min_m=None,
+                            avoid_median_s=None, vlm_median_s=None, vlm_calls_median=None,
+                            sim_errors=len(rs_all)))
+            continue
         def med(k):
             v = [r[k] for r in rs if r[k] is not None]
             return round(statistics.median(v), 2) if v else None
@@ -153,13 +162,15 @@ def summarize(runs):
                         right_target=sum(bool(r["right_target"]) for r in rs),
                         t_arrive_median_s=med("t_arrive_s"), standoff_median_m=med("standoff_m"),
                         prop_clear_min_m=mn("prop_clear_m"), avoid_median_s=med("avoid_s"),
-                        vlm_median_s=round(statistics.median(lat), 2) if lat else None))
+                        vlm_median_s=round(statistics.median(lat), 2) if lat else None,
+                        vlm_calls_median=med("vlm_n"), sim_errors=len(rs_all) - len(rs)))
     return out
 
 
 def markdown(groups):
     head = ["world", "target", "search", "runs", "success", "arrived", "right target", "time to goal (s, median)",
-            "stand-off (m, median)", "min prop clearance (m)", "going around (s, median)", "VLM latency (s, median)"]
+            "stand-off (m, median)", "min prop clearance (m)", "going around (s, median)", "VLM latency (s, median)",
+            "VLM calls (median)", "sim errors (not counted)"]
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for g in groups:
         f = lambda v: "–" if v is None else str(v)  # noqa: E731
@@ -167,7 +178,8 @@ def markdown(groups):
                                          f"{g['success']}/{g['runs']}", f"{g['arrived']}/{g['runs']}",
                                          f"{g['right_target']}/{g['runs']}", f(g["t_arrive_median_s"]),
                                          f(g["standoff_median_m"]), f(g["prop_clear_min_m"]),
-                                         f(g["avoid_median_s"]), f(g["vlm_median_s"])]) + " |")
+                                         f(g["avoid_median_s"]), f(g["vlm_median_s"]), f(g["vlm_calls_median"]),
+                                         f(g["sim_errors"])]) + " |")
     return "\n".join(lines)
 
 

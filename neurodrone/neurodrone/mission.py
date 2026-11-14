@@ -73,6 +73,13 @@ def box_depth(depth_m: np.ndarray, depth_cam: Pinhole, rgb_cam: Pinhole, box: Se
     return float(np.median(win[ok]))
 
 
+def box_at_edge(box: Sequence[float], margin: float = 0.02) -> bool:
+    """The box touches the left or right image edge: the object is cut off, its centre is not the object's centre, and
+    the depth inside it can belong to something in front (14 Nov: the green box at the image edge behind a pole gave the
+    pole's distance, and the drone stopped 1.5 m before the pole, 6 m short). No goal from such a box: turn first."""
+    return box[0] <= margin or box[2] >= 1.0 - margin
+
+
 def goal_from_box(box: Sequence[float], dist_m: float, rgb_cam: Pinhole, state, cam_offset_frd=(0.12, -0.03, -0.24),
                   standoff_m: float = 1.5, keep_alt: bool = True) -> np.ndarray:
     """NED point to fly to: along the ray through the box centre, `standoff_m` short of the object; at the current
@@ -101,8 +108,16 @@ class GuardResult:
     reason: str = ""
 
 
+def level_rotation(att_deg: Optional[Tuple[float, float]]) -> Optional[np.ndarray]:
+    """Camera/body FRD -> heading-aligned level frame (roll and pitch removed), from (roll_deg, pitch_deg)."""
+    if att_deg is None:
+        return None
+    return R_ned_from_frd(float(att_deg[0]), float(att_deg[1]), 0.0)
+
+
 def corridor_distance(depth_m: np.ndarray, cam: Pinhole, dir_frd: np.ndarray, radius_m: float = 0.6,
-                      dmin: float = 0.2, dmax: float = 15.0, step: int = 2, k_robust: int = 8) -> float:
+                      dmin: float = 0.2, dmax: float = 15.0, step: int = 2, k_robust: int = 8,
+                      R_level: Optional[np.ndarray] = None) -> float:
     """Distance to the closest obstacle inside a corridor of radius_m around the direction dir_frd (body FRD, from
     the camera): the k_robust-th closest along-track distance, so single noisy pixels do not count. inf = clear
     (as far as the camera sees: only directions inside its field of view are covered)."""
@@ -116,6 +131,8 @@ def corridor_distance(depth_m: np.ndarray, cam: Pinhole, dir_frd: np.ndarray, ra
     ok = np.isfinite(d) & (d >= dmin) & (d <= dmax)
     Z = d[ok]
     P = np.stack([Z, (us[ok] + 0.5 - w / 2) / cam.f * Z, (vs[ok] + 0.5 - h / 2) / cam.f * Z], -1)  # FRD
+    if R_level is not None:  # points into the level frame, so the corridor stays horizontal when the drone tilts
+        P = P @ R_level.T
     s = P @ dvec
     miss = np.linalg.norm(P - s[:, None] * dvec, axis=-1)
     sel = np.sort(s[(s > 0) & (miss < radius_m)])
@@ -123,15 +140,19 @@ def corridor_distance(depth_m: np.ndarray, cam: Pinhole, dir_frd: np.ndarray, ra
 
 
 def guard(depth_m: Optional[np.ndarray], cam: Pinhole, v_frd: np.ndarray, depth_age_s: float,
-          radius_m: float = 0.8, stop_dist_m: float = 1.2, ttc_s: float = 2.0, max_age_s: float = 0.5) -> GuardResult:
+          radius_m: float = 0.8, stop_dist_m: float = 1.2, ttc_s: float = 2.0, max_age_s: float = 0.5,
+          att_deg: Optional[Tuple[float, float]] = None) -> GuardResult:
     """Block the commanded motion if an obstacle in its corridor is closer than stop_dist_m or would be reached in
-    less than ttc_s. No (fresh) depth image -> blocked: never fly blind."""
+    less than ttc_s. No (fresh) depth image -> blocked: never fly blind.
+    att_deg = (roll, pitch) of the drone: the corridor is then horizontal along the commanded (horizontal) velocity
+    instead of tilting with the camera. Without it, a drone pitched forward 10-15 deg while accelerating at 1.2-1.4 m
+    height had the floor inside its corridor and stopped in an empty world (14 Nov)."""
     if depth_m is None or depth_age_s > max_age_s:
         return GuardResult(math.inf, math.inf, True, "no fresh depth")
     sp = float(np.linalg.norm(v_frd))
     if sp < 0.05:
         return GuardResult(math.inf, math.inf, False, "")
-    dist = corridor_distance(depth_m, cam, v_frd, radius_m)
+    dist = corridor_distance(depth_m, cam, v_frd, radius_m, R_level=level_rotation(att_deg))
     t = dist / sp if math.isfinite(dist) else math.inf
     if dist < stop_dist_m:
         return GuardResult(dist, t, True, f"obstacle {dist:.1f} m ahead")
@@ -228,10 +249,11 @@ class Avoider:
         return out
 
     def step(self, cmd: Command, depth_m: Optional[np.ndarray], cam: Pinhole, depth_age_s: float, now: float,
-             radius_m: float = 0.8, stop_dist_m: float = 1.2, ttc_s: float = 2.0):
-        """-> (command to send, guard result for the straight path)."""
+             radius_m: float = 0.8, stop_dist_m: float = 1.2, ttc_s: float = 2.0,
+             att_deg: Optional[Tuple[float, float]] = None):
+        """-> (command to send, guard result for the straight path). att_deg = (roll, pitch): see guard()."""
         v = np.array([cmd.vx, cmd.vy, 0.0])
-        g = guard(depth_m, cam, v, depth_age_s, radius_m, stop_dist_m, ttc_s)
+        g = guard(depth_m, cam, v, depth_age_s, radius_m, stop_dist_m, ttc_s, att_deg=att_deg)
         if cmd.phase != "fly" or g.reason == "no fresh depth":
             self.angle = None
             return apply_guard(cmd, g), g
@@ -241,7 +263,7 @@ class Avoider:
         best = None
         for a in self._candidates(g.blocked):
             d = np.array([math.cos(math.radians(a)), math.sin(math.radians(a)), 0.0])
-            if corridor_distance(depth_m, cam, d, radius_m) >= self.clear_m:
+            if corridor_distance(depth_m, cam, d, radius_m, R_level=level_rotation(att_deg)) >= self.clear_m:
                 best = a
                 break
         if best is None:
@@ -285,7 +307,7 @@ class Searcher:
         if self.settled_at is None:
             self.settled_at = now
         if last and last.get("t_capture") is not None and last["t_capture"] >= self.settled_at:
-            if not last.get("found"):
+            if not last.get("usable", last.get("found")):  # found only at the image edge counts as not found here
                 self.i += 1
                 self.settled_at = None
                 return 0.0, f"nothing at {off:+.0f} deg, next view"

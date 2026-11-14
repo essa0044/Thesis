@@ -96,13 +96,17 @@ class VlmWorker(threading.Thread):
             goal, box, dist = None, None, None
             if p is not None and p.found and p.w is not None:
                 box = [p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2]
-                dist = M.box_depth(depth, DEPTH_CAM, RGB_CAM, box)
+                at_edge = M.box_at_edge(box)
+                dist = None if at_edge else M.box_depth(depth, DEPTH_CAM, RGB_CAM, box)
                 if dist is not None:
                     goal = M.goal_from_box(box, dist, RGB_CAM, state, standoff_m=self.a.standoff)
+                    if getattr(self.a, "alt", None):  # fly at the mission altitude, not the altitude of the moment
+                        goal[2] = -float(self.a.alt)
             acc = self.cons.add(goal)
             if acc is not None:
                 self.goal = acc
-            self.last = dict(found=bool(p and p.found), box=box, dist=dist, latency_s=lat, accepted=acc is not None,
+            self.last = dict(found=bool(p and p.found), usable=goal is not None, box=box, dist=dist, latency_s=lat,
+                             accepted=acc is not None,
                              t_capture=t_capture, yaw_capture=getattr(state, "yaw_deg", None))
             self.log.log("vlm", text=text[:300], box=box, dist_m=dist, goal=None if goal is None else goal.tolist(),
                          accepted=None if acc is None else acc.tolist(), latency_s=lat, rgb_age_s=age)
@@ -178,11 +182,11 @@ async def main_async(a):
             depth, dage = cams.depth()
             if a.no_avoid:
                 g = M.guard(depth, DEPTH_CAM, np.array([cmd.vx, cmd.vy, 0.0]), dage, radius_m=a.radius,
-                            stop_dist_m=a.stop_dist, ttc_s=a.ttc)
+                            stop_dist_m=a.stop_dist, ttc_s=a.ttc, att_deg=(s.roll_deg, s.pitch_deg))
                 cmd = M.apply_guard(cmd, g)
             else:
                 cmd, g = avoider.step(cmd, depth, DEPTH_CAM, dage, time.monotonic(), radius_m=a.radius,
-                                      stop_dist_m=a.stop_dist, ttc_s=a.ttc)
+                                      stop_dist_m=a.stop_dist, ttc_s=a.ttc, att_deg=(s.roll_deg, s.pitch_deg))
             if cmd.phase == "search" and a.search_yaw:
                 yr, note = searcher.step(s.yaw_deg, time.monotonic(), w.last)
                 cmd = M.Command(0, 0, 0, yr, "search", note)

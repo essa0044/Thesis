@@ -22,13 +22,13 @@ WORLDS="${WORLDS:-nd_test nd_obstacles}"
 TARGETS="${TARGETS:-the red box;the blue barrel;the green box}"
 OUT="${OUT:-$KIT/results/series/$(date +%Y%m%d_%H%M)_${SEARCH:-sweep}}"
 HEADLESS="${HEADLESS:-0}"
-MAX_TIME="${MAX_TIME:-180}"
+MAX_TIME="${MAX_TIME:-360}"   # s in OFFBOARD before giving up; a CPU-only VLM call takes ~55 s on the laptop
 SEARCH_YAW="${SEARCH_YAW:-20}"  # deg/s turn rate of the turn-stop-look search while no goal is accepted
 SEARCH="${SEARCH:-sweep}"       # sweep (fixed headings) or active (active sensing: the answers pick the next view)
 NUM_CTX="${NUM_CTX:-2048}"      # same in the warm-up and every call, or Ollama reloads the model
 NUM_GPU="${NUM_GPU:-}"          # model layers on the GPU (0 = CPU only); empty = Ollama decides
 GPU_ARG=(); [ -n "$NUM_GPU" ] && GPU_ARG=(--num-gpu "$NUM_GPU")
-VLM_MAX_MEDIAN="${VLM_MAX_MEDIAN:-30}"  # stop before the series if a VLM call takes longer than this (s)
+VLM_MAX_MEDIAN="${VLM_MAX_MEDIAN:-120}"  # flag (TOO SLOW) if the first-run VLM check takes longer than this (s)
 
 mkdir -p "$OUT/px4" "$OUT/frames"
 cp "$KIT"/sim/worlds/nd_*.sdf "$PX4_DIR/Tools/simulation/gz/worlds/"
@@ -85,28 +85,31 @@ for i in $(seq 1 "$RUNS"); do
     for t in "${TLIST[@]}"; do
       n=$((n + 1)); slug=$(echo "$t" | sed 's/^the //; s/ /_/g'); name="${w}__${slug}__${i}"
       echo; echo "=== run $n/$total: $name   $(date +%H:%M:%S)"
-      cleanup
-      ( cd "$PX4_DIR" && sleep infinity | env PX4_GZ_WORLD="$w" HEADLESS="$([ "$HEADLESS" = 1 ] && echo 1)" \
-          make px4_sitl gz_x500_depth ) > "$OUT/px4/$name.log" 2>&1 &
-      ok=0
-      for _ in $(seq 1 120); do
-        grep -q "Ready for takeoff" "$OUT/px4/$name.log" 2>/dev/null && { ok=1; break; }; sleep 1
+      for attempt in 1 2; do  # a run that never reaches OFFBOARD (PX4 takeoff/arming failed) is a simulator error: once more
+        cleanup
+        ( cd "$PX4_DIR" && sleep infinity | env PX4_GZ_WORLD="$w" HEADLESS="$([ "$HEADLESS" = 1 ] && echo 1)" \
+            make px4_sitl gz_x500_depth ) > "$OUT/px4/$name.log" 2>&1 &
+        ok=0
+        for _ in $(seq 1 120); do
+          grep -q "Ready for takeoff" "$OUT/px4/$name.log" 2>/dev/null && { ok=1; break; }; sleep 1
+        done
+        if [ $ok = 0 ]; then echo "PX4 not ready after 120 s (see $OUT/px4/$name.log)"; continue; fi
+        sleep 5  # let the estimator settle
+        if [ $loaded = 0 ]; then  # first run: (re)load the VLM now that Gazebo holds its share of the GPU, and time it
+          vlm_check "$name" --calls 1
+          loaded=1
+          echo "VLM check: $(grep -E '^(on the GPU|median|TOO SLOW)' "$OUT/vlm/$name.txt" | tr '\n' ' ')"
+        fi
+        mirror
+        ( cd "$KIT" && timeout $(( MAX_TIME + 120 )) "$VENV/bin/python" scripts/sim_mission.py --instruction "$t" \
+            --ollama "$OLLAMA" --model "$MODEL" --max-time "$MAX_TIME" --search-yaw "$SEARCH_YAW" --search "$SEARCH" \
+            --num-ctx "$NUM_CTX" "${GPU_ARG[@]}" --log "$OUT/$name.jsonl" --save-frames "$OUT/frames/$name" ) 2>&1 \
+          | grep -v -E "FutureWarning|mavsdk-grpc|To carry on|To freeze|To migrate|_bootstrap" | tail -4
+        sleep 8  # landing
+        grep -q '"kind": "offboard"' "$OUT/$name.jsonl" 2>/dev/null && break
+        echo "simulator error (no OFFBOARD) - attempt $attempt"
+        [ -f "$OUT/$name.jsonl" ] && mv "$OUT/$name.jsonl" "$OUT/px4/$name.simerror$attempt.log"
       done
-      if [ $ok = 0 ]; then echo "PX4 not ready after 120 s - skipped (see $OUT/px4/$name.log)"; continue; fi
-      sleep 5  # let the estimator settle
-      if [ $loaded = 0 ]; then
-        vlm_check "$name" --calls 2 && loaded=1
-      else
-        vlm_check "$name" --no-reload --calls 1 || vlm_check "$name" --calls 2
-      fi
-      loaded=1
-      echo "VLM check: $(grep -E '^(on the GPU|median|TOO SLOW)' "$OUT/vlm/$name.txt" | tr '\n' ' ')"
-      mirror
-      ( cd "$KIT" && timeout $(( MAX_TIME + 120 )) "$VENV/bin/python" scripts/sim_mission.py --instruction "$t" \
-          --ollama "$OLLAMA" --model "$MODEL" --max-time "$MAX_TIME" --search-yaw "$SEARCH_YAW" --search "$SEARCH" --num-ctx "$NUM_CTX" "${GPU_ARG[@]}" \
-          --log "$OUT/$name.jsonl" --save-frames "$OUT/frames/$name" ) 2>&1 \
-        | grep -v -E "FutureWarning|mavsdk-grpc|To carry on|To freeze|To migrate|_bootstrap" | tail -4
-      sleep 8  # landing
       summary >/dev/null 2>&1; mirror
     done
   done

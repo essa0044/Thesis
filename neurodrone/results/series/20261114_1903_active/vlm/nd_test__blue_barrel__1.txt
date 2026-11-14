@@ -1,0 +1,12 @@
+on the GPU: 0 % of 3.3 GB (rest on the CPU)
+call 1: 6.5 s  {
+  "found": true,
+  "box": [
+    570,
+    478,
+    637,
+    593
+  ]
+}
+median 6.5 s
+{"gpu_share": 0.0, "size_bytes": 3269459966, "latencies_s": [6.55], "num_ctx": 2048, "num_gpu": 0, "max_side": 896, "model": "qwen3-vl:4b-instruct"}

@@ -185,3 +185,38 @@ def test_active_searcher_answer_used_once():
     b = s.belief.copy()
     s.step(s.target, 6.0, ans)  # same answer again: no second update
     assert (s.belief == b).all()
+
+
+def _floor_depth(cam, height_m, pitch_deg):
+    """Depth image of a flat floor `height_m` below a camera pitched by pitch_deg (nose down < 0)."""
+    from neurodrone.mission import R_ned_from_frd
+    R = R_ned_from_frd(0.0, pitch_deg, 0.0)
+    v, u = np.mgrid[0:cam.height, 0:cam.width]
+    rays = np.stack([np.ones(u.shape), (u + 0.5 - cam.width / 2) / cam.f, (v + 0.5 - cam.height / 2) / cam.f], -1)
+    down = rays @ R.T
+    with np.errstate(divide="ignore", invalid="ignore"):
+        t = np.where(down[..., 2] > 1e-6, height_m / down[..., 2], np.nan)
+    return t.astype(np.float32)  # x-component of the ray is 1: t is the depth
+
+
+def test_guard_ignores_the_floor_when_pitched():
+    from neurodrone.mission import Pinhole, guard
+    cam = Pinhole(160, 120, 1.274)
+    d = _floor_depth(cam, height_m=1.2, pitch_deg=-20.0)
+    v = np.array([1.0, 0.0, 0.0])
+    g0 = guard(d, cam, v, 0.0)
+    assert g0.blocked and g0.dist_ahead_m < 2.0  # corridor tilted with the camera: the floor counts as an obstacle
+    g = guard(d, cam, v, 0.0, att_deg=(0.0, -20.0))
+    assert not g.blocked and g.dist_ahead_m == float("inf")  # level corridor at 1.2 m height, radius 0.8
+    level = _floor_depth(cam, height_m=1.3, pitch_deg=0.0)
+    assert not guard(level, cam, v, 0.0, att_deg=(0.0, 0.0)).blocked
+
+
+def test_box_at_edge_and_sweep_moves_on():
+    from neurodrone.mission import Searcher, box_at_edge
+    assert box_at_edge([0.91, 0.6, 1.0, 0.8]) and box_at_edge([0.0, 0.6, 0.1, 0.8])
+    assert not box_at_edge([0.4, 0.4, 0.6, 0.6])
+    s = Searcher(max_rate=20.0)
+    s.step(90.0, 0.0, None)
+    s.step(90.0, 6.0, dict(found=True, usable=False, t_capture=1.0))  # cut off at the edge: next view
+    assert s.i == 1

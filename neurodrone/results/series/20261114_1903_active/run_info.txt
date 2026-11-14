@@ -1,0 +1,9 @@
+date: 2026-11-14T19:03:56+01:00
+neurodrone commit: 9e988effb399c964370d9731a4e7ad25f8a9fb48
+px4: v1.17.0
+gazebo: 8.15.0
+ollama: {"version":"0.40.13"}
+model: qwen3-vl:4b-instruct
+runs: 2  worlds: nd_test nd_obstacles  targets: the red box;the blue barrel;the green box  max_time: 180  search: active  num_gpu: 0  search_yaw: 20  headless: 1
+NVIDIA GeForce RTX 3050 Laptop GPU, 565.90
+results are copied to: /mnt/c/Users/essaa/Downloads/series_auto

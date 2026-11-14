@@ -815,6 +815,42 @@ All 9 runs met the criteria (wall: stopped and never closer than 0.3 m; free and
 
 **Indoor positioning: visual-inertial odometry from the RealSense (updated 14 Nov).** Velocity commands need a position estimate in PX4, and indoors there is no GPS; the IMUs alone drift within seconds. VLN on the Fly (Tayar et al., USP; the same Pixhawk 6C + RealSense D435i + Jetson combination) flew with an OptiTrack motion-capture system fused by PX4's EKF2, but the lab has no motion capture and nothing is to be bought. So the drone estimates its own position from its camera: visual-inertial odometry (VIO) on the Jetson from the D435i's stereo infrared images and its IMU (first choice NVIDIA Isaac ROS Visual SLAM / cuVSLAM, which supports the RealSense on Jetson; OpenVINS as an alternative), sent to PX4 as MAVLink odometry, with EKF2 using external vision for position, velocity and heading (`EKF2_EV_CTRL`, `EKF2_HGT_REF` = vision, GPS and compass off, `EKF2_EV_DELAY` tuned), as in PX4's visual-inertial-odometry guide. Consequences for the thesis: (1) the D435i's IR dot projector helps depth but hurts VIO tracking, so it is either alternated frame by frame or switched off at some cost to the guard's depth; (2) VIO and the VLM share the Jetson's GPU and 8 GB of memory, and VIO must never stall; (3) there is no external ground truth, so distances (stopping distance, clearance, stand-off) are measured with floor markings and a tape measure or video, and VIO drift with return-to-start tests; (4) VIO can lose track in plain or dim rooms, so the safety pilot and PX4 failsafes must be ready. If an optical-flow sensor or motion capture becomes available later, PX4 takes it through the same estimator interface.
 
+### 15.6 Pilot series: sweep vs active search (14 Nov, laptop, VLM on the CPU)
+
+**Set-up.** `HEADLESS=1 NUM_GPU=0 bash sim/run_all.sh` at commit 9e988ef: 3 targets × 2 worlds × 2 runs, first with the sweep, then with the active search (24 runs, 18:16–19:50), Gazebo without window, Qwen3-VL-4B-Instruct entirely on the CPU, 180 s limit. Logs, frames and PX4 output: `neurodrone/results/series/20261114_1816_sweep` and `20261114_1903_active`; tables re-made with the analysis of 14 Nov evening (simulator errors counted separately).
+
+Sweep:
+
+| world | target | search | runs | success | arrived | right target | time to goal (s, median) | stand-off (m, median) | min prop clearance (m) | going around (s, median) | VLM latency (s, median) | VLM calls (median) | sim errors (not counted) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| nd_obstacles | the blue barrel | sweep | 2 | 1/2 | 1/2 | 2/2 | 152.6 | 3.32 | 0.44 | 5.65 | 53.95 | 2.5 | 0 |
+| nd_obstacles | the green box | sweep | 2 | 0/2 | 2/2 | 2/2 | 122.85 | 5.94 | 1.33 | 0.0 | 52.97 | 2.0 | 0 |
+| nd_obstacles | the red box | sweep | 2 | 1/2 | 1/2 | 2/2 | 138.3 | 3.17 | 0.5 | 7.0 | 59.45 | 2.0 | 0 |
+| nd_test | the blue barrel | sweep | 1 | 1/1 | 1/1 | 1/1 | 130.8 | 1.82 | – | 0.0 | 51.61 | 2 | 1 |
+| nd_test | the green box | sweep | 2 | 2/2 | 2/2 | 2/2 | 146.65 | 1.63 | – | 0.0 | 54.99 | 2.0 | 0 |
+| nd_test | the red box | sweep | 2 | 1/2 | 1/2 | 1/2 | 134.9 | 5.05 | – | 0.35 | 57.8 | 2.0 | 0 |
+
+Active search:
+
+| world | target | search | runs | success | arrived | right target | time to goal (s, median) | stand-off (m, median) | min prop clearance (m) | going around (s, median) | VLM latency (s, median) | VLM calls (median) | sim errors (not counted) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| nd_obstacles | the blue barrel | active | 1 | 1/1 | 1/1 | 1/1 | 133.0 | 1.94 | 0.44 | 6.5 | 51.0 | 2 | 1 |
+| nd_obstacles | the green box | active | 2 | 0/2 | 1/2 | 2/2 | 123.0 | 5.5 | 0.64 | 3.35 | 52.2 | 2.5 | 0 |
+| nd_obstacles | the red box | active | 2 | 2/2 | 2/2 | 2/2 | 143.65 | 1.93 | 0.53 | 7.0 | 54.38 | 2.0 | 0 |
+| nd_test | the blue barrel | active | 2 | 2/2 | 2/2 | 2/2 | 135.2 | 1.87 | – | 0.0 | 54.37 | 2.0 | 0 |
+| nd_test | the green box | active | 2 | 2/2 | 2/2 | 2/2 | 143.65 | 1.65 | – | 0.0 | 55.71 | 2.0 | 0 |
+| nd_test | the red box | active | 2 | 2/2 | 2/2 | 2/2 | 137.2 | 1.86 | – | 0.0 | 54.6 | 2.0 | 0 |
+
+**Overall:** sweep 6 of 11 runs successful, active search 9 of 11 (one simulator error each, not counted). Every run that succeeded needed 2 VLM answers (the consensus minimum).
+
+**What the failures showed:**
+1. **The VLM took 51–58 s per answer in flight (CPU only).** The check before each run said about 6 s because it sent the same test picture twice and Ollama reuses its work on a picture it has just processed; only the first call in the check was honest (57.8 s). With 2 answers needed, goals were accepted after 100–150 s; three runs ran out of the 180 s. Fixed: the check uses a new picture for every call; the limit is 360 s.
+2. **Green box behind a pole: goal 6 m short (sweep 2 of 2, active 1 of 2).** At the start the green box is cut off at the right edge of the picture (box x 0.91–1.00) and the pole stands in front of that part of the image: the median depth in the box was the pole's (4.85 m), so the goal was 1.5 m before the pole and the drone "arrived" there. In one active run the drone first turned to centre the box; the depth was then 9.1 m, which is right (it then ran out of time at the pole). Fixed: no goal from a box that touches the left or right image edge (`mission.box_at_edge`); the sweep treats such a find as "not found" and moves to the next view, the active search turns to centre it. This is an argument for active sensing: centring the object gives a correct distance.
+3. **The guard saw the floor.** In one empty-world run the drone flew at 1.2–1.4 m and pitched forward while accelerating; the guard's corridor tilted with the camera and the floor fell inside it ("obstacle 0.4 m ahead", 15 s blocked). Fixed: the corridor is now horizontal (roll and pitch removed with the drone's attitude) and goals are at the mission altitude, not the altitude at the moment of the picture. Test added.
+4. **Simulator errors:** 2 runs never left the ground (PX4 takeoff timed out; arming denied). Not counted; the series now retries such a run once.
+
+These are pilot results with known bugs; the series is to be repeated with the fixes (5 runs per case).
+
 ## 16. Problems met and how they were fixed
 
 Every problem that changed a method or a number, newest first. These belong in the thesis's methods and limitations sections.

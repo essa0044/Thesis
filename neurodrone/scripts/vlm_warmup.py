@@ -7,7 +7,8 @@
 Ollama decides at load time how many layers go to the GPU, from the GPU memory free at that moment. Loaded while
 Gazebo is running on a 4 GB laptop GPU, Qwen3-VL-4B ended up 54 % on the CPU and every call took more than 60 s
 (12 Nov). So: unload, load again with the same num_ctx and keep_alive the missions use (a different num_ctx makes Ollama
-reload), then time calls on a 1920 x 1080 test image (a red box on grey, sent at --max-side like the missions).
+reload), then time calls on 1920 x 1080 test images (a red box on grey, a new picture every call, sent at --max-side
+like the missions).
 """
 import _path  # noqa: F401
 import argparse
@@ -38,11 +39,17 @@ def gpu_share(base, model):
     return None, None
 
 
-def test_image():
+def test_image(k=0):
+    """A different picture for every call: Ollama reuses its work on a picture it has just seen, so timing the same
+    picture twice measured only the first call honestly (14 Nov: 6 s in the check, 51-58 s per call in flight)."""
+    rng = np.random.default_rng(k)
     img = np.full((1080, 1920, 3), 200, np.uint8)
     img[600:1080] = 170  # floor
-    img[520:640, 1100:1220] = (180, 30, 30)  # red box
-    img[540:660, 600:680] = (30, 60, 180)  # blue barrel
+    x, y = int(rng.integers(300, 1500)), int(rng.integers(450, 700))
+    img[y:y + 120, x:x + 120] = (180, 30, 30)  # red box, somewhere else each time
+    x2 = int(rng.integers(100, 1700))
+    img[540:660, x2:x2 + 80] = (30, 60, 180)  # blue barrel
+    img[:, :, :] = np.clip(img.astype(np.int16) + rng.integers(-6, 7, img.shape, dtype=np.int16), 0, 255)
     return img
 
 
@@ -70,9 +77,9 @@ def main(argv=None):
     share, size = gpu_share(base, a.model)
     if share is not None:
         print(f"on the GPU: {100 * share:.0f} % of {size / 1e9:.1f} GB (rest on the CPU)", flush=True)
-    jpeg, _ = encode_jpeg(test_image(), max_side=a.max_side, quality=90)
     lat = []
     for i in range(a.calls):
+        jpeg, _ = encode_jpeg(test_image(int(time.time() * 1000) % 100000 + i), max_side=a.max_side, quality=90)
         text, t = ask_ollama(a.ollama, a.model, jpeg, "the red box", num_ctx=a.num_ctx, num_gpu=a.num_gpu)
         lat.append(t)
         print(f"call {i + 1}: {t:.1f} s  {text.strip()[:80]}", flush=True)

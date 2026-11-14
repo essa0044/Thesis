@@ -1,0 +1,22 @@
+model loaded in 9.3 s
+on the GPU: 0 % of 3.3 GB (rest on the CPU)
+call 1: 51.2 s  {
+  "found": true,
+  "box": [
+    570,
+    478,
+    637,
+    593
+  ]
+}
+call 2: 5.4 s  {
+  "found": true,
+  "box": [
+    570,
+    478,
+    637,
+    593
+  ]
+}
+median 28.3 s
+{"gpu_share": 0.0, "size_bytes": 3269459966, "latencies_s": [51.25, 5.42], "num_ctx": 2048, "num_gpu": 0, "max_side": 896, "model": "qwen3-vl:4b-instruct"}
