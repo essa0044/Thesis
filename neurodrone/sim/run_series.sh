@@ -60,7 +60,13 @@ curl -s "$OLLAMA/api/generate" -d "{\"model\": \"$MODEL\", \"keep_alive\": 0}" >
 mkdir -p "$OUT/vlm"
 # copy of the results in the Windows Downloads folder after every run (for reading them from Windows)
 MIRROR="${MIRROR:-}"
-if [ -z "$MIRROR" ] && [ -d "/mnt/c/Users/$USER/Downloads" ]; then MIRROR="/mnt/c/Users/$USER/Downloads/series_auto"; fi
+if [ -z "$MIRROR" ]; then
+  for c in "$(wslpath "$(cmd.exe /c 'echo %USERPROFILE%' 2>/dev/null | tr -d '\r')" 2>/dev/null)" \
+           "/mnt/c/Users/${USER:-$(whoami)}"; do
+    if [ -n "$c" ] && [ -d "$c/Downloads" ]; then MIRROR="$c/Downloads/series_auto"; break; fi
+  done
+fi
+echo "results are copied to: ${MIRROR:-(nowhere: no Windows Downloads folder found)}" | tee -a "$OUT/run_info.txt"
 mirror() { [ -n "$MIRROR" ] && mkdir -p "$MIRROR" && cp -r "$OUT" "$MIRROR/" 2>/dev/null; true; }
 vlm_check() {  # $1 = run name, $2.. = extra args
   local f="$OUT/vlm/$1.txt"; shift
@@ -68,6 +74,7 @@ vlm_check() {  # $1 = run name, $2.. = extra args
       --max-median "$VLM_MAX_MEDIAN" "$@" ) >> "$f" 2>&1
 }
 loaded=0
+mirror  # visible in Windows right away
 
 IFS=';' read -r -a TLIST <<< "$TARGETS"
 n=0; total=$(( RUNS * $(wc -w <<< "$WORLDS") * ${#TLIST[@]} ))
@@ -92,6 +99,7 @@ for i in $(seq 1 "$RUNS"); do
       fi
       loaded=1
       echo "VLM check: $(grep -E '^(on the GPU|median|TOO SLOW)' "$OUT/vlm/$name.txt" | tr '\n' ' ')"
+      mirror
       ( cd "$KIT" && timeout $(( MAX_TIME + 120 )) "$VENV/bin/python" scripts/sim_mission.py --instruction "$t" \
           --ollama "$OLLAMA" --model "$MODEL" --max-time "$MAX_TIME" --search-yaw "$SEARCH_YAW" --search "$SEARCH" --num-ctx "$NUM_CTX" \
           --log "$OUT/$name.jsonl" --save-frames "$OUT/frames/$name" ) 2>&1 \
