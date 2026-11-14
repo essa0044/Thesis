@@ -123,3 +123,33 @@ def test_avoider_stale_depth_stops_and_turning_untouched():
     turn = Command(0.0, 0.0, 0.0, 20.0, "turn")
     out, _ = av.step(turn, _pole_depth(cam), cam, 0.0, now=0.0)
     assert out == turn
+
+
+# ----------------------------------------------------------------------------- search
+def test_searcher_turns_stops_and_looks():
+    from neurodrone.mission import Searcher
+    s = Searcher(max_rate=20.0)
+    yr, note = s.step(90.0, now=0.0, last=None)  # start heading = first view
+    assert yr == 0 and "looking at +0" in note
+    yr, _ = s.step(90.0, now=1.0, last=dict(found=False, t_capture=-1.0))  # old picture (before settling): ignored
+    assert yr == 0 and s.i == 0
+    yr, note = s.step(90.0, now=6.0, last=dict(found=False, t_capture=0.5))  # fresh picture, nothing -> next view
+    assert s.i == 1 and "next view" in note
+    yr, note = s.step(90.0, now=6.1, last=dict(found=False, t_capture=0.5))
+    assert yr == 20.0 and "turning to +30" in note  # clockwise towards +30, rate capped
+    yr, _ = s.step(119.0, now=8.0, last=dict(found=False, t_capture=0.5))  # within tolerance: settle
+    assert yr == 0 and s.settled_at == 8.0
+    yr, note = s.step(119.0, now=14.0, last=dict(found=True, t_capture=8.5))  # found: stay
+    assert yr == 0 and "waiting for agreement" in note and s.i == 1
+    s.step(119.0, now=20.0, last=dict(found=False, t_capture=14.5))  # lost it: next view is -30
+    yr, note = s.step(119.0, now=20.1, last=None)
+    assert yr < 0 and "turning to -30" in note
+
+
+def test_searcher_wraps_around_north():
+    from neurodrone.mission import Searcher
+    s = Searcher(max_rate=20.0)
+    s.step(170.0, 0.0, None)
+    s.step(170.0, 5.0, dict(found=False, t_capture=1.0))  # -> +30 = 200 = -160
+    yr, note = s.step(170.0, 5.1, None)
+    assert yr > 0 and "+30" in note  # short way (clockwise through 180), not 330 deg back

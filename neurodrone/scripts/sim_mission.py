@@ -73,6 +73,7 @@ class VlmWorker(threading.Thread):
         while not self.stop:
             t0 = time.monotonic()
             rgb, age = self.cams.rgb()
+            t_capture = t0 - (age if age != float("inf") else 0.0)
             depth, dage = self.cams.depth()
             state = self.get_state()
             if rgb is None or depth is None or state is None:
@@ -98,7 +99,8 @@ class VlmWorker(threading.Thread):
             acc = self.cons.add(goal)
             if acc is not None:
                 self.goal = acc
-            self.last = dict(found=bool(p and p.found), box=box, dist=dist, latency_s=lat, accepted=acc is not None)
+            self.last = dict(found=bool(p and p.found), box=box, dist=dist, latency_s=lat, accepted=acc is not None,
+                             t_capture=t_capture)
             self.log.log("vlm", text=text[:300], box=box, dist_m=dist, goal=None if goal is None else goal.tolist(),
                          accepted=None if acc is None else acc.tolist(), latency_s=lat, rgb_age_s=age)
             print(f"[vlm] {lat:.2f} s  found={self.last['found']}  dist={dist if dist is None else round(dist, 2)}  "
@@ -154,6 +156,7 @@ async def main_async(a):
     t_start = time.monotonic()
     outcome = "error"
     log.log("offboard", alt_m=a.alt)
+    searcher = M.Searcher(max_rate=a.search_yaw) if a.search_yaw else None
     avoider = M.Avoider(max_angle_deg=a.avoid_angle, speed=a.avoid_speed)
     dt = 1.0 / a.rate
     last_print = 0.0
@@ -173,7 +176,8 @@ async def main_async(a):
                 cmd, g = avoider.step(cmd, depth, DEPTH_CAM, dage, time.monotonic(), radius_m=a.radius,
                                       stop_dist_m=a.stop_dist, ttc_s=a.ttc)
             if cmd.phase == "search" and a.search_yaw:
-                cmd = M.Command(0, 0, 0, a.search_yaw, "search", "turning to look")
+                yr, note = searcher.step(s.yaw_deg, time.monotonic(), w.last)
+                cmd = M.Command(0, 0, 0, yr, "search", note)
             await veh.send_velocity(VelocityCmd(cmd.vx, cmd.vy, cmd.vz, cmd.yaw_rate))
             log.log("ctl", phase=cmd.phase, note=cmd.note, vx=cmd.vx, vy=cmd.vy, yaw_rate=cmd.yaw_rate, n=s.north_m, e=s.east_m,
                     d=s.down_m, yaw=s.yaw_deg, guard_dist=g.dist_ahead_m, guard_ttc=g.ttc_s, guard_blocked=g.blocked,
@@ -236,7 +240,7 @@ def main():
     ap.add_argument("--consensus-need", type=int, default=2)
     ap.add_argument("--consensus-window", type=int, default=3)
     ap.add_argument("--consensus-tol", type=float, default=1.5)
-    ap.add_argument("--search-yaw", type=float, default=0.0, help="deg/s to turn while no goal is accepted (0 = hover)")
+    ap.add_argument("--search-yaw", type=float, default=0.0, help="while no goal is accepted: turn-stop-look search, turning at up to this many deg/s (0 = just hover)")
     ap.add_argument("--hover-s", type=float, default=3.0, help="hover this long at the goal, then land")
     ap.add_argument("--max-time", type=float, default=180.0, help="give up and land after this many s in OFFBOARD")
     ap.add_argument("--no-fly", action="store_true")

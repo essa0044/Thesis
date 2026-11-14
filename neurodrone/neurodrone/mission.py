@@ -256,3 +256,38 @@ class Avoider:
         r = math.radians(best)
         return Command(sp * math.cos(r), sp * math.sin(r), cmd.vz, cmd.yaw_rate, "avoid",
                        f"going around {'right' if best > 0 else 'left'} {abs(best):.0f} deg"), g
+
+
+@dataclass
+class Searcher:
+    """Turn-stop-look search while no goal is accepted. A VLM answer takes several seconds, so turning continuously
+    means the object has left the picture before the next answer and two answers never agree (12 Nov: 0 of 6 runs).
+    Instead: turn to the next heading of a sweep around the start heading (0, +30, -30, +60, -60 ... 180 deg), hold
+    still until a VLM answer arrives for a picture taken after the turn ended, stay while the answers find the object
+    (the goal consensus then accepts it), and turn on as soon as an answer finds nothing."""
+    offsets: Tuple[float, ...] = (0, 30, -30, 60, -60, 90, -90, 120, -120, 150, -150, 180)
+    max_rate: float = 20.0  # deg/s
+    k_yaw: float = 1.5
+    tol_deg: float = 3.0
+    yaw0: Optional[float] = None
+    i: int = 0
+    settled_at: Optional[float] = None
+
+    def step(self, yaw_deg: float, now: float, last: Optional[dict]):
+        """-> (yaw_rate deg/s, note). last: the newest VLM answer, dict with found and t_capture (monotonic s)."""
+        if self.yaw0 is None:
+            self.yaw0 = yaw_deg
+        off = self.offsets[self.i % len(self.offsets)]
+        err = (self.yaw0 + off - yaw_deg + 180.0) % 360.0 - 180.0
+        if abs(err) > self.tol_deg:
+            self.settled_at = None
+            return max(-self.max_rate, min(self.max_rate, self.k_yaw * err)), f"turning to {off:+.0f} deg"
+        if self.settled_at is None:
+            self.settled_at = now
+        if last and last.get("t_capture") is not None and last["t_capture"] >= self.settled_at:
+            if not last.get("found"):
+                self.i += 1
+                self.settled_at = None
+                return 0.0, f"nothing at {off:+.0f} deg, next view"
+            return 0.0, f"found at {off:+.0f} deg, waiting for agreement"
+        return 0.0, f"looking at {off:+.0f} deg"

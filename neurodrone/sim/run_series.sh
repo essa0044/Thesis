@@ -22,7 +22,7 @@ TARGETS="${TARGETS:-the red box;the blue barrel;the green box}"
 OUT="${OUT:-$KIT/results/series/$(date +%Y%m%d_%H%M)}"
 HEADLESS="${HEADLESS:-0}"
 MAX_TIME="${MAX_TIME:-180}"
-SEARCH_YAW="${SEARCH_YAW:-8}"
+SEARCH_YAW="${SEARCH_YAW:-20}"  # deg/s turn rate of the turn-stop-look search while no goal is accepted
 NUM_CTX="${NUM_CTX:-2048}"      # same in the warm-up and every call, or Ollama reloads the model
 VLM_MAX_MEDIAN="${VLM_MAX_MEDIAN:-30}"  # stop before the series if a VLM call takes longer than this (s)   # deg/s turn while no goal is accepted (the barrel and green box are near the view's edge)
 
