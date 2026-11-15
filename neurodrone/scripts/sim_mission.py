@@ -169,6 +169,7 @@ async def main_async(a):
         searcher = M.ActiveSearcher(max_rate=a.search_yaw)
     else:
         searcher = M.Searcher(max_rate=a.search_yaw)
+    watchdog = M.DepthWatchdog()
     avoider = M.Avoider(max_angle_deg=a.avoid_angle, speed=a.avoid_speed)
     dt = 1.0 / a.rate
     last_print = 0.0
@@ -180,6 +181,8 @@ async def main_async(a):
             latest["state"] = s
             cmd = M.steer(w.goal, s, vmax=a.vmax)
             depth, dage = cams.depth()
+            if watchdog.update(depth, s.north_m, s.east_m):
+                dage = float("inf")  # frozen picture: treated as no depth, the guard stops the drone
             if a.no_avoid:
                 g = M.guard(depth, DEPTH_CAM, np.array([cmd.vx, cmd.vy, 0.0]), dage, radius_m=a.radius,
                             stop_dist_m=a.stop_dist, ttc_s=a.ttc, att_deg=(s.roll_deg, s.pitch_deg))
@@ -191,7 +194,7 @@ async def main_async(a):
                 yr, note = searcher.step(s.yaw_deg, time.monotonic(), w.last)
                 cmd = M.Command(0, 0, 0, yr, "search", note)
             await veh.send_velocity(VelocityCmd(cmd.vx, cmd.vy, cmd.vz, cmd.yaw_rate))
-            log.log("ctl", phase=cmd.phase, note=cmd.note, vx=cmd.vx, vy=cmd.vy, yaw_rate=cmd.yaw_rate, n=s.north_m, e=s.east_m,
+            log.log("ctl", phase=cmd.phase, note=cmd.note, depth_frozen=watchdog.frozen, vx=cmd.vx, vy=cmd.vy, yaw_rate=cmd.yaw_rate, n=s.north_m, e=s.east_m,
                     d=s.down_m, yaw=s.yaw_deg, guard_dist=g.dist_ahead_m, guard_ttc=g.ttc_s, guard_blocked=g.blocked,
                     goal=None if w.goal is None else w.goal.tolist())
             if cmd.phase == "arrived":

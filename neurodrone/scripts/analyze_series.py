@@ -121,6 +121,7 @@ def analyze_run(path, worlds_dir):
     else:
         res["pole_surface_m"] = res["prop_clear_m"] = None
     dt = statistics.median([b["t"] - a["t"] for a, b in zip(ctl, ctl[1:])]) if len(ctl) > 1 else 0.05
+    res["depth_frozen_steps"] = sum(bool(r.get("depth_frozen")) for r in ctl)
     res["blocked_s"] = round(sum(r.get("phase") == "blocked" for r in ctl) * dt, 1)
     res["avoid_s"] = round(sum(r.get("phase") == "avoid" for r in ctl) * dt, 1)
     lat = [r["latency_s"] for r in vlm if r.get("latency_s") is not None]
@@ -147,7 +148,7 @@ def summarize(runs):
             out.append(dict(world=world, instruction=instr, search=search, runs=0, success=0, arrived=0, right_target=0,
                             t_arrive_median_s=None, standoff_median_m=None, prop_clear_min_m=None,
                             avoid_median_s=None, vlm_median_s=None, vlm_calls_median=None,
-                            sim_errors=len(rs_all)))
+                            sim_errors=len(rs_all), depth_frozen_steps=0))
             continue
         def med(k):
             v = [r[k] for r in rs if r[k] is not None]
@@ -163,14 +164,15 @@ def summarize(runs):
                         t_arrive_median_s=med("t_arrive_s"), standoff_median_m=med("standoff_m"),
                         prop_clear_min_m=mn("prop_clear_m"), avoid_median_s=med("avoid_s"),
                         vlm_median_s=round(statistics.median(lat), 2) if lat else None,
-                        vlm_calls_median=med("vlm_n"), sim_errors=len(rs_all) - len(rs)))
+                        vlm_calls_median=med("vlm_n"), sim_errors=len(rs_all) - len(rs),
+                        depth_frozen_steps=sum(r.get("depth_frozen_steps", 0) for r in rs)))
     return out
 
 
 def markdown(groups):
     head = ["world", "target", "search", "runs", "success", "arrived", "right target", "time to goal (s, median)",
             "stand-off (m, median)", "min prop clearance (m)", "going around (s, median)", "VLM latency (s, median)",
-            "VLM calls (median)", "sim errors (not counted)"]
+            "VLM calls (median)", "sim errors (not counted)", "frozen-depth steps"]
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for g in groups:
         f = lambda v: "–" if v is None else str(v)  # noqa: E731
@@ -179,7 +181,7 @@ def markdown(groups):
                                          f"{g['right_target']}/{g['runs']}", f(g["t_arrive_median_s"]),
                                          f(g["standoff_median_m"]), f(g["prop_clear_min_m"]),
                                          f(g["avoid_median_s"]), f(g["vlm_median_s"]), f(g["vlm_calls_median"]),
-                                         f(g["sim_errors"])]) + " |")
+                                         f(g["sim_errors"]), f(g["depth_frozen_steps"])]) + " |")
     return "\n".join(lines)
 
 

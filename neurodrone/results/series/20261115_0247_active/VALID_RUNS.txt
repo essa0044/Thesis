@@ -1,0 +1,34 @@
+Runs flown before the Windows restart of 15 Nov (depth camera working):
+nd_obstacles__blue_barrel__1.jsonl
+nd_obstacles__green_box__1.jsonl
+nd_obstacles__red_box__1.jsonl
+nd_test__blue_barrel__1.jsonl
+nd_test__blue_barrel__2.jsonl
+nd_test__green_box__1.jsonl
+nd_test__red_box__1.jsonl
+nd_test__red_box__2.jsonl
+
+nd_test__green_box__2.jsonl was running when the PC restarted (03:27): interrupted, not counted.
+
+Runs after the restart (13:35-15:30) are INVALID: Gazebo's depth picture froze during flight (guard distance unchanged in 72-90 % of moving steps).
+nd_obstacles__blue_barrel__2.jsonl
+nd_obstacles__blue_barrel__3.jsonl
+nd_obstacles__blue_barrel__4.jsonl
+nd_obstacles__blue_barrel__5.jsonl
+nd_obstacles__green_box__2.jsonl
+nd_obstacles__green_box__3.jsonl
+nd_obstacles__green_box__4.jsonl
+nd_obstacles__green_box__5.jsonl
+nd_obstacles__red_box__2.jsonl
+nd_obstacles__red_box__3.jsonl
+nd_obstacles__red_box__4.jsonl
+nd_obstacles__red_box__5.jsonl
+nd_test__blue_barrel__3.jsonl
+nd_test__blue_barrel__4.jsonl
+nd_test__blue_barrel__5.jsonl
+nd_test__green_box__3.jsonl
+nd_test__green_box__4.jsonl
+nd_test__green_box__5.jsonl
+nd_test__red_box__3.jsonl
+nd_test__red_box__4.jsonl
+nd_test__red_box__5.jsonl

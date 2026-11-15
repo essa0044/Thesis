@@ -220,3 +220,15 @@ def test_box_at_edge_and_sweep_moves_on():
     s.step(90.0, 0.0, None)
     s.step(90.0, 6.0, dict(found=True, usable=False, t_capture=1.0))  # cut off at the edge: next view
     assert s.i == 1
+
+
+def test_depth_watchdog_flags_a_frozen_picture_only_when_moving():
+    from neurodrone.mission import DepthWatchdog
+    w = DepthWatchdog(moved_m=0.5)
+    img = np.full((48, 64), 5.0, np.float32)
+    assert not w.update(img, 0.0, 0.0)
+    assert not w.update(img.copy(), 0.0, 0.3)  # same picture, moved 0.3 m: still fine (hovering, slow drift)
+    assert w.update(img.copy(), 0.0, 0.8)  # same picture after 0.8 m: frozen
+    img2 = img.copy(); img2[::16, ::16] = 4.0
+    assert not w.update(img2, 0.0, 1.0)  # picture changed: fresh again
+    assert not w.update(None, 0.0, 5.0)

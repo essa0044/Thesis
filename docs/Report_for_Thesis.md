@@ -851,6 +851,40 @@ Active search:
 
 These are pilot results with known bugs; the series is to be repeated with the fixes (5 runs per case).
 
+### 15.7 Series of 15 Nov: sweep complete, active search interrupted (laptop, VLM on the CPU)
+
+**Set-up.** Commit d4d3804 (fixes of 15.6), `HEADLESS=1 NUM_GPU=0 RUNS=5 bash sim/run_all.sh`, 360 s limit; started 00:05. The sweep finished all 30 runs (00:05–02:45). The active search had flown 8 runs when Windows restarted for an update (03:27); it was resumed at 13:35 for the other 22 runs (`OUT=… bash sim/run_series.sh`, commit e3a65d6). Logs: `neurodrone/results/series/20261115_0005_sweep`, `20261115_0247_active` (valid runs listed in `VALID_RUNS.txt`).
+
+Sweep (30 runs, all valid):
+
+| world | target | search | runs | success | arrived | right target | time to goal (s, median) | stand-off (m, median) | min prop clearance (m) | going around (s, median) | VLM latency (s, median) | VLM calls (median) | sim errors (not counted) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| nd_obstacles | the blue barrel | sweep | 5 | 2/5 | 2/5 | 5/5 | 204.05 | 8.93 | 0.38 | 0.0 | 54.19 | 6 | 0 |
+| nd_obstacles | the green box | sweep | 5 | 5/5 | 5/5 | 5/5 | 314.7 | 2.0 | 0.52 | 9.0 | 54.6 | 5 | 0 |
+| nd_obstacles | the red box | sweep | 5 | 5/5 | 5/5 | 5/5 | 153.9 | 1.93 | 0.47 | 8.2 | 55.61 | 2 | 0 |
+| nd_test | the blue barrel | sweep | 5 | 0/5 | 0/5 | 5/5 | – | 9.05 | – | 0.0 | 53.74 | 6 | 0 |
+| nd_test | the green box | sweep | 5 | 4/5 | 4/5 | 5/5 | 309.4 | 1.96 | – | 0.0 | 54.38 | 5 | 0 |
+| nd_test | the red box | sweep | 5 | 4/5 | 4/5 | 4/5 | 146.6 | 1.9 | – | 0.0 | 57.63 | 2 | 0 |
+
+Active search, the 8 runs before the restart (valid):
+
+| world | target | search | runs | success | arrived | right target | time to goal (s, median) | stand-off (m, median) | min prop clearance (m) | going around (s, median) | VLM latency (s, median) | VLM calls (median) | sim errors (not counted) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| nd_obstacles | the blue barrel | active | 1 | 1/1 | 1/1 | 1/1 | 216.8 | 1.94 | 0.53 | 9.1 | 59.85 | 3 | 0 |
+| nd_obstacles | the green box | active | 1 | 1/1 | 1/1 | 1/1 | 335.2 | 2.01 | 0.55 | 8.3 | 58.42 | 5 | 0 |
+| nd_obstacles | the red box | active | 1 | 1/1 | 1/1 | 1/1 | 159.0 | 1.93 | 0.4 | 8.2 | 63.53 | 2 | 0 |
+| nd_test | the blue barrel | active | 2 | 2/2 | 2/2 | 2/2 | 329.55 | 1.9 | – | 0.0 | 59.22 | 5.0 | 0 |
+| nd_test | the green box | active | 1 | 1/1 | 1/1 | 1/1 | 331.4 | 1.96 | – | 0.0 | 58.79 | 5 | 0 |
+| nd_test | the red box | active | 2 | 2/2 | 2/2 | 2/2 | 152.95 | 1.86 | – | 0.0 | 62.7 | 2.0 | 0 |
+
+**Sweep: 20 of 30 successful, no contact with a pole (closest propeller clearance 0.38 m).** All 10 failures are timeouts in the search, 8 of them with the blue barrel (0/5 without, 2/5 with the pole). At the start the barrel is cut off at the left edge of the picture, so no goal is made from it (15.6); the sweep's fixed order looks at +30° (the wrong side) before -30°, every view costs about two VLM answers (the answer already running when the drone stops belongs to a picture taken while turning) and an answer takes about 55 s on the CPU, so the barrel is found at -30° at about 320 s and the second, confirming answer comes after the 360 s limit. The two other failures (one red box, one green box, no obstacles) are also search timeouts. Successful runs needed 2 VLM answers for the red box (in view at the start) and 5 for the green box and the barrel.
+
+**Active search: 8 of 8 successful before the restart**, including the blue barrel in 3 of 3 (the cut-off barrel turns the drone towards it: 3 VLM answers with the pole, 5 without).
+
+**The 22 runs after the restart are invalid: Gazebo's depth picture froze.** The depth images kept arriving with new timestamps but showed an old picture: the guard's distance stayed the same in 72–90 % of the steps in which the drone moved (11–22 % before the restart, from the 20 Hz control loop reading a 20 Hz camera), e.g. 5.7 m during 7 m of flight. The guard was blind; the drone passed poles with 0.06–0.14 m propeller clearance and touched one (-0.42 m). The probable cause is the Windows update (graphics driver or WSL) changing how Gazebo renders without a window; not investigated further. Fix in the stack (also needed on the real drone, where a USB camera can freeze): `mission.DepthWatchdog` — if the drone has moved more than 0.5 m and the depth picture has not changed, the depth counts as stale and the guard stops the drone. The mission log records `depth_frozen` per step; the results table counts frozen-depth steps. 1 test added; 23 pass.
+
+**Next:** check that Gazebo's depth updates again (one obstacle run, frozen-depth steps should be 0), then fly the active search again in full (30 runs) for the comparison with the sweep.
+
 ## 16. Problems met and how they were fixed
 
 Every problem that changed a method or a number, newest first. These belong in the thesis's methods and limitations sections.

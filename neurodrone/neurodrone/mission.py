@@ -161,6 +161,32 @@ def guard(depth_m: Optional[np.ndarray], cam: Pinhole, v_frd: np.ndarray, depth_
     return GuardResult(dist, t, False, "")
 
 
+class DepthWatchdog:
+    """Frozen-picture check for the depth camera. A depth image that still arrives on time but shows the same picture
+    while the drone moves is as bad as no image: the guard is blind. On 15 Nov (after a Windows restart) Gazebo kept
+    sending the same depth picture with fresh timestamps; the guard read 5.7 m for 7 m of flight and the drone passed
+    poles within centimetres. Real USB cameras can freeze the same way. Rule: if the drone has moved more than
+    `moved_m` since the depth picture last changed, the depth counts as stale (the guard then stops the drone)."""
+
+    def __init__(self, moved_m: float = 0.5, stride: int = 16):
+        self.moved_m, self.stride = moved_m, stride
+        self._sig = None
+        self._pos = None
+        self.frozen = False
+
+    def update(self, depth_m: Optional[np.ndarray], north_m: float, east_m: float) -> bool:
+        """-> True if the depth picture is frozen. Call every control step."""
+        if depth_m is None:
+            return False
+        sig = hash(np.ascontiguousarray(depth_m[::self.stride, ::self.stride]).tobytes())
+        if sig != self._sig or self._pos is None:
+            self._sig, self._pos = sig, (north_m, east_m)
+            self.frozen = False
+        else:
+            self.frozen = math.hypot(north_m - self._pos[0], east_m - self._pos[1]) > self.moved_m
+        return self.frozen
+
+
 # ----------------------------------------------------------------------------- goal consensus
 @dataclass
 class Consensus:
