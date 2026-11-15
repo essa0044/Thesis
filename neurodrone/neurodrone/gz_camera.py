@@ -56,7 +56,7 @@ class GzCameras:
     (rgb_hz, depth_hz) where the gz-transport Python bindings support it."""
 
     def __init__(self, rgb_topic: Optional[str] = None, depth_topic: str = "/depth_camera",
-                 rgb_hz: float = 5.0, depth_hz: float = 20.0, rgb_on_demand: bool = True):
+                 rgb_hz: float = 5.0, depth_hz: float = 20.0, rgb_on_demand: bool = False):
         from gz.msgs10.image_pb2 import Image  # noqa: WPS433 (system package, imported lazily)
         from gz.transport13 import Node
         self.rgb_topic = rgb_topic or find_topic("IMX214")
@@ -72,10 +72,12 @@ class GzCameras:
         self._sim_now = None  # latest simulation time from the world clock (s)
         self.node = Node()
         self._Image, self._rgb_hz = Image, rgb_hz
-        # The RGB camera (1920 x 1080, 30 Hz, ~6 MB a picture) is only subscribed while a picture is wanted. Subscribed
-        # all the time, its messages queued up in front of the depth and clock messages whenever the Python process
-        # could not unpack them fast enough: on 15 Nov the depth pictures and the clock reached the guard 4-5 s late,
-        # in step with each other, so the drone flew past a pole it saw only afterwards (scripts/depth_check.py).
+        # The RGB camera (1920 x 1080, ~6 MB a picture) at Gazebo's default 30 Hz queued up in front of the depth and
+        # clock messages whenever the Python process could not unpack them fast enough: on 15 Nov the depth pictures
+        # and the clock reached the guard 4-5 s late (scripts/depth_check.py). Subscribing only on demand
+        # (rgb_on_demand=True) fixed that but made Gazebo stall for seconds each time it restarted rendering the camera
+        # (PX4 sensor timeouts, one failsafe crash). The fix in use: the camera is rendered at 2 Hz
+        # (sim/run_series.sh sets the model's update_rate) and stays subscribed.
         self.rgb_on_demand = rgb_on_demand
         self._grab_lock = threading.Lock()
         topics = [(self.depth_topic, self._on_depth, depth_hz)]

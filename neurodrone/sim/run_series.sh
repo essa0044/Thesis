@@ -35,6 +35,21 @@ GZ_GPU="${GZ_GPU:-NVIDIA}"
 if [ "$GZ_GPU" != none ] && [ -e /dev/dxg ]; then
   export GALLIUM_DRIVER=d3d12 MESA_D3D12_DEFAULT_ADAPTER_NAME="$GZ_GPU"
 fi
+# Gazebo renders the 1920 x 1080 RGB camera at RGB_HZ instead of the model's 30 Hz: the VLM needs one picture every
+# few seconds, and 30 pictures of 6 MB a second made the depth and clock messages reach the guard seconds late (15 Nov).
+RGB_HZ="${RGB_HZ:-2}"
+OAK="$PX4_DIR/Tools/simulation/gz/models/OakD-Lite/model.sdf"
+if [ -f "$OAK" ]; then
+  [ -f "$OAK.orig" ] || cp "$OAK" "$OAK.orig"
+  python3 - "$OAK.orig" "$OAK" "$RGB_HZ" <<'PY'
+import re, sys
+src, dst, hz = sys.argv[1], sys.argv[2], sys.argv[3]
+s = open(src).read()
+i = s.index('<sensor name="IMX214"'); j = s.index('</sensor>', i)
+blk = re.sub(r"<update_rate>[^<]*</update_rate>", f"<update_rate>{hz}</update_rate>", s[i:j], count=1)
+open(dst, "w").write(s[:i] + blk + s[j:])
+PY
+fi
 VLM_MAX_MEDIAN="${VLM_MAX_MEDIAN:-120}"  # flag (TOO SLOW) if the first-run VLM check takes longer than this (s)
 
 mkdir -p "$OUT/px4" "$OUT/frames"
@@ -47,6 +62,7 @@ curl -s --max-time 5 "$OLLAMA/api/version" >/dev/null || { echo "no Ollama at $O
   echo "runs: $RUNS  worlds: $WORLDS  targets: $TARGETS  max_time: $MAX_TIME  search: $SEARCH  num_gpu: ${NUM_GPU:-auto}  search_yaw: $SEARCH_YAW  headless: $HEADLESS"
   command -v nvidia-smi >/dev/null && nvidia-smi --query-gpu=name,driver_version --format=csv,noheader
   echo "gazebo renderer: $(glxinfo -B 2>/dev/null | grep -E 'OpenGL renderer string' | cut -d: -f2-) (GZ_GPU=$GZ_GPU)"
+  echo "rgb camera: $(grep -A16 'sensor name="IMX214"' "$OAK" 2>/dev/null | grep -o '<update_rate>[^<]*' | head -1 | cut -d'>' -f2) Hz (RGB_HZ=$RGB_HZ)"
 } >> "$OUT/run_info.txt"   # appended: a resumed series (same OUT) keeps the earlier info
 cat "$OUT/run_info.txt"
 

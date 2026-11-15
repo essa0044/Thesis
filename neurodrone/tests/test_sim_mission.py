@@ -140,7 +140,7 @@ def test_gz_cameras_judge_age_by_simulation_time(monkeypatch):
 def test_gz_cameras_fetch_rgb_only_on_demand(monkeypatch):
     import threading as _th
     subs = _fake_gz(monkeypatch, True)
-    cams = gc.GzCameras(rgb_topic="/world/w/model/x/image", depth_topic="/depth")
+    cams = gc.GzCameras(rgb_topic="/world/w/model/x/image", depth_topic="/depth", rgb_on_demand=True)
     assert "/world/w/model/x/image" not in subs and "/depth" in subs  # RGB not subscribed until wanted
     rgb = np.full((3, 4, 3), 9, np.uint8)
     m = types.SimpleNamespace(width=4, height=3, data=rgb.tobytes(), pixel_format_type=3)
