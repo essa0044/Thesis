@@ -69,10 +69,24 @@ class GzCameras:
         self._rgb_cache = (None, None)  # (msg it was decoded from, array)
         self._depth_cache = (None, None)
         self.throttled = False
+        self._sim_now = None  # latest simulation time from the world clock (s)
         self.node = Node()
         for topic, cb, hz in ((self.rgb_topic, self._on_rgb, rgb_hz), (self.depth_topic, self._on_depth, depth_hz)):
             if not self._subscribe(Image, topic, cb, hz):
                 raise RuntimeError(f"cannot subscribe to {topic}")
+        # Simulation clock: a picture's age is judged by the simulation time it was taken at, not by when it arrived.
+        # With Gazebo rendering on the CPU (llvmpipe, 15 Nov) the depth pictures arrived on time but were taken
+        # 5-6 s earlier, and the guard saw the pole only after the drone had passed it.
+        self.clock_topic = None
+        parts = self.rgb_topic.split("/")
+        if len(parts) > 2 and parts[1] == "world":
+            try:
+                from gz.msgs10.clock_pb2 import Clock
+                topic = f"/world/{parts[2]}/clock"
+                if self.node.subscribe(Clock, topic, self._on_clock):
+                    self.clock_topic = topic
+            except Exception:  # noqa: BLE001
+                pass
 
     def _subscribe(self, Image, topic, cb, hz) -> bool:
         try:
@@ -86,6 +100,29 @@ class GzCameras:
         except Exception:  # noqa: BLE001  (older bindings: no SubscribeOptions in Python)
             pass
         return self.node.subscribe(Image, topic, cb)
+
+    def _on_clock(self, msg):
+        sim = getattr(msg, "sim", None)
+        if sim is not None:
+            self._sim_now = float(sim.sec) + float(sim.nsec) * 1e-9
+
+    @staticmethod
+    def _stamp(msg) -> Optional[float]:
+        h = getattr(msg, "header", None)
+        st = getattr(h, "stamp", None) if h is not None else None
+        if st is None:
+            return None
+        v = float(st.sec) + float(st.nsec) * 1e-9
+        return v if v > 0 else None
+
+    def sim_lag(self, which: str = "depth") -> Optional[float]:
+        """Simulation seconds between the picture's capture and the latest clock tick (None if unknown)."""
+        with self._lock:
+            msg = self._depth_msg if which == "depth" else self._rgb_msg
+        st = self._stamp(msg) if msg is not None else None
+        if st is None or self._sim_now is None:
+            return None
+        return max(0.0, self._sim_now - st)
 
     def _on_rgb(self, msg):
         with self._lock:
@@ -108,10 +145,13 @@ class GzCameras:
                     self._rgb_cache = cache
                 else:
                     self._depth_cache = cache
-        return cache[1], time.monotonic() - t
+        age = time.monotonic() - t
+        lag = self.sim_lag(which)
+        return cache[1], age if lag is None else max(age, lag)
 
     def rgb(self) -> Tuple[Optional[np.ndarray], float]:
-        """(frame, age in s). The array is read-only and shared: copy it before changing it."""
+        """(frame, age in s): the larger of the time since it arrived and, when the world clock is known, the
+        simulation time since it was taken. The array is read-only and shared: copy it before changing it."""
         return self._get("rgb")
 
     def depth(self) -> Tuple[Optional[np.ndarray], float]:

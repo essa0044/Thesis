@@ -133,7 +133,7 @@ async def main_async(a):
     cams = GzCameras(a.rgb_topic, a.depth_topic)
     print(f"cameras: {cams.rgb_topic}, {cams.depth_topic}", flush=True)
     cams.wait()
-    print(f"camera subscriptions throttled: {cams.throttled}", flush=True)
+    print(f"camera subscriptions throttled: {cams.throttled}; simulation clock: {cams.clock_topic}", flush=True)
     world = cams.rgb_topic.split("/")[2] if cams.rgb_topic.startswith("/world/") else None
     log = JsonlLogger(a.log)
     log.log("start", instruction=a.instruction, model=a.model, world=world, no_fly=a.no_fly,
@@ -194,7 +194,8 @@ async def main_async(a):
                 yr, note = searcher.step(s.yaw_deg, time.monotonic(), w.last)
                 cmd = M.Command(0, 0, 0, yr, "search", note)
             await veh.send_velocity(VelocityCmd(cmd.vx, cmd.vy, cmd.vz, cmd.yaw_rate))
-            log.log("ctl", phase=cmd.phase, note=cmd.note, depth_frozen=watchdog.frozen, vx=cmd.vx, vy=cmd.vy, yaw_rate=cmd.yaw_rate, n=s.north_m, e=s.east_m,
+            log.log("ctl", phase=cmd.phase, note=cmd.note, depth_frozen=watchdog.frozen, depth_age=round(dage, 3)
+                    if dage != float("inf") else None, vx=cmd.vx, vy=cmd.vy, yaw_rate=cmd.yaw_rate, n=s.north_m, e=s.east_m,
                     d=s.down_m, yaw=s.yaw_deg, guard_dist=g.dist_ahead_m, guard_ttc=g.ttc_s, guard_blocked=g.blocked,
                     goal=None if w.goal is None else w.goal.tolist())
             if cmd.phase == "arrived":

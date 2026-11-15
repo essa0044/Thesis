@@ -106,3 +106,24 @@ def test_gz_cameras_throttle_and_decode_lazily(monkeypatch):
         a2, _ = cams.rgb()  # same message: decoded once
         assert (a1 == 7).all() and a1 is a2 and len(calls) == 1
         monkeypatch.setattr(gc, "decode_image", real)
+
+
+def test_gz_cameras_judge_age_by_simulation_time(monkeypatch):
+    import sys as _sys
+    subs = _fake_gz(monkeypatch, True)
+    clock_pb2 = types.ModuleType("gz.msgs10.clock_pb2")
+    clock_pb2.Clock = object
+    monkeypatch.setitem(_sys.modules, "gz.msgs10.clock_pb2", clock_pb2)
+    cams = gc.GzCameras(rgb_topic="/world/w/model/x/image", depth_topic="/depth")
+    assert cams.clock_topic == "/world/w/clock"
+    dep = np.full((3, 4), 2.0, np.float32)
+    stamp = types.SimpleNamespace(sec=10, nsec=0)
+    m = types.SimpleNamespace(width=4, height=3, data=dep.tobytes(), pixel_format_type=13,
+                              header=types.SimpleNamespace(stamp=stamp))
+    subs["/depth"][0](m)
+    subs["/world/w/clock"][0](types.SimpleNamespace(sim=types.SimpleNamespace(sec=10, nsec=200_000_000)))
+    _, age = cams.depth()
+    assert abs(age - 0.2) < 0.05  # just arrived, taken 0.2 s of simulation time ago
+    subs["/world/w/clock"][0](types.SimpleNamespace(sim=types.SimpleNamespace(sec=16, nsec=0)))
+    _, age = cams.depth()
+    assert age > 5.9  # same picture, simulation 6 s further: late
