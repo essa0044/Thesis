@@ -5,6 +5,7 @@
 #   RUNS=1 bash sim/run_series.sh                                    # quick check: 6 runs
 #   HEADLESS=1 bash sim/run_series.sh                                # no Gazebo window (less GPU load)
 #   SEARCH=active bash sim/run_series.sh                             # active-sensing search instead of the fixed sweep
+#   OUT=results/series/20261115_0247_active SEARCH=active bash sim/run_series.sh   # resume: runs already done are skipped
 #   TARGETS="the red box" WORLDS=nd_obstacles RUNS=3 bash sim/run_series.sh
 #
 # Needs: sim/setup_sim_ubuntu.sh done once (PX4 built, ~/nd-venv), Ollama reachable at OLLAMA (default
@@ -39,7 +40,7 @@ curl -s --max-time 5 "$OLLAMA/api/version" >/dev/null || { echo "no Ollama at $O
   echo "ollama: $(curl -s "$OLLAMA/api/version")"; echo "model: $MODEL"
   echo "runs: $RUNS  worlds: $WORLDS  targets: $TARGETS  max_time: $MAX_TIME  search: $SEARCH  num_gpu: ${NUM_GPU:-auto}  search_yaw: $SEARCH_YAW  headless: $HEADLESS"
   command -v nvidia-smi >/dev/null && nvidia-smi --query-gpu=name,driver_version --format=csv,noheader
-} > "$OUT/run_info.txt"
+} >> "$OUT/run_info.txt"   # appended: a resumed series (same OUT) keeps the earlier info
 cat "$OUT/run_info.txt"
 
 cleanup() {
@@ -84,6 +85,9 @@ for i in $(seq 1 "$RUNS"); do
   for w in $WORLDS; do
     for t in "${TLIST[@]}"; do
       n=$((n + 1)); slug=$(echo "$t" | sed 's/^the //; s/ /_/g'); name="${w}__${slug}__${i}"
+      if [ -f "$OUT/$name.jsonl" ] && grep -q '"kind": "offboard"' "$OUT/$name.jsonl"; then
+        echo "=== run $n/$total: $name already done (resume)"; continue
+      fi
       echo; echo "=== run $n/$total: $name   $(date +%H:%M:%S)"
       for attempt in 1 2; do  # a run that never reaches OFFBOARD (PX4 takeoff/arming failed) is a simulator error: once more
         cleanup
