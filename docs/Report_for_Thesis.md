@@ -1019,6 +1019,24 @@ The open checks from 29 Oct are closed (section 9), the long workstation runs ar
     7. Chapter 7 Conclusion and future work.
     8. Supervisor review, revision, submission.
 
+### 18.1 Staged test plan: from laptop simulation to lab flight (15 Nov)
+
+Each stage changes one or two things compared with the one before and has a pass check; the next stage starts only when it passes. Every stage keeps its logs as thesis data. The same mission code runs in every stage; only where the pictures, the VLM and the flight controller come from changes.
+
+| # | Stage | What changes | Measured | Pass check |
+|---|---|---|---|---|
+| 0 | Laptop simulation (done / series running) | – | success, VLM answers to goal, stand-off, pole clearance, sweep vs active | logic works; results table |
+| 1 | **VLM bench on the Jetson** (no camera, no drone) | computer: Orin Nano Super, headless JetPack, NVMe, swap; Ollama or llama.cpp, q4 | latency per answer on new pictures (`vlm_warmup.py`, 50+ calls), first-call time, memory (`tegrastats`), temperature and clock throttling over 30 min of continuous calls, power; accuracy on the same benchmark samples as on the workstation (RefDrone, RefCOCO subsets at 896 px) | median latency ≤ 10 s, accuracy within ~2 points of the workstation, ≥ 1 GB memory free, no throttling; otherwise LFM3-VL 2B / smaller pictures |
+| 2 | **Jetson in the loop with Gazebo** (no real sensors) | the mission code and VLM run on the Jetson; PX4 SITL + Gazebo stay on the laptop, connected by Ethernet (MAVLink over UDP; Gazebo pictures over the network) | the same series as stage 0 (or a subset) with the real Jetson latency inside the loop | success comparable to stage 0; no late or frozen depth; control loop holds 20 Hz on the Jetson |
+| 3 | **RealSense bench** (camera on a table or tripod, Jetson, no drone) | real RGB + depth | depth error vs tape measure at 0.5–6 m on the lab's objects and floor; RGB-depth alignment; VLM on real pictures of the lab objects: found rate and wrong-object rate per target; distance from box + depth vs tape; guard: move a box towards the static camera (stop distance, false stops from floor or walls); frame timestamps (late / frozen check on the RealSense); dot projector on vs off | depth error and found rate known and acceptable; guard stops at the set distance on real depth |
+| 4 | **Record and replay** (camera + Jetson carried by hand along the planned paths) | real motion, still no drone | recorded RealSense sequences (.bag) replayed through the mission code offline: goals, consensus and guard decisions vs tape-measured truth; repeatable thesis data set | goals within ~0.5 m of truth; guard triggers where it should and not elsewhere |
+| 5 | **Flight controller on the bench, propellers off** | real Pixhawk 6C + Jetson over USB (MAVLink) | link and message rates; OFFBOARD accepted; velocity commands give the expected motor response; failsafes: Jetson program killed, USB unplugged, stale depth → PX4 holds or lands | every failsafe behaves as set |
+| 6 | **Indoor position without the VLM** | VIO from the RealSense on the Jetson into PX4 (external vision) | VIO drift by hand and on a cart vs tape; then hover and position hold with a safety pilot (tethered or in a net), drift over 2 min | stable position hold; drift known |
+| 7 | **First flights, step by step** (safety pilot, low speed) | the full drone | (a) scripted OFFBOARD moves, no VLM, no guard; (b) guard only: fly at 0.3 m/s towards a soft obstacle (foam / cardboard box), stop distance; (c) go-around around a soft pole; (d) VLM goal from hover with turn-stop-look search; (e) the full test list as in simulation | each sub-step safe before the next |
+| 8 | **Lab test series** | – | the stage-0 test list (targets, with and without an obstacle, sweep vs active), same metrics | → simulation vs reality comparison (the sim-to-real question) |
+
+Stages 1–5 need no flying and can start the day the hardware arrives; stage 3 also gives the real-depth data for the sim-to-real question even if flights are delayed.
+
 ## 19. Open questions and sources
 
 **Open questions.**
