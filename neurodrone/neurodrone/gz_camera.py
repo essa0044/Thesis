@@ -56,7 +56,7 @@ class GzCameras:
     (rgb_hz, depth_hz) where the gz-transport Python bindings support it."""
 
     def __init__(self, rgb_topic: Optional[str] = None, depth_topic: str = "/depth_camera",
-                 rgb_hz: float = 5.0, depth_hz: float = 20.0):
+                 rgb_hz: float = 5.0, depth_hz: float = 20.0, rgb_on_demand: bool = True):
         from gz.msgs10.image_pb2 import Image  # noqa: WPS433 (system package, imported lazily)
         from gz.transport13 import Node
         self.rgb_topic = rgb_topic or find_topic("IMX214")
@@ -71,7 +71,17 @@ class GzCameras:
         self.throttled = False
         self._sim_now = None  # latest simulation time from the world clock (s)
         self.node = Node()
-        for topic, cb, hz in ((self.rgb_topic, self._on_rgb, rgb_hz), (self.depth_topic, self._on_depth, depth_hz)):
+        self._Image, self._rgb_hz = Image, rgb_hz
+        # The RGB camera (1920 x 1080, 30 Hz, ~6 MB a picture) is only subscribed while a picture is wanted. Subscribed
+        # all the time, its messages queued up in front of the depth and clock messages whenever the Python process
+        # could not unpack them fast enough: on 15 Nov the depth pictures and the clock reached the guard 4-5 s late,
+        # in step with each other, so the drone flew past a pole it saw only afterwards (scripts/depth_check.py).
+        self.rgb_on_demand = rgb_on_demand
+        self._grab_lock = threading.Lock()
+        topics = [(self.depth_topic, self._on_depth, depth_hz)]
+        if not rgb_on_demand:
+            topics.insert(0, (self.rgb_topic, self._on_rgb, rgb_hz))
+        for topic, cb, hz in topics:
             if not self._subscribe(Image, topic, cb, hz):
                 raise RuntimeError(f"cannot subscribe to {topic}")
         # Simulation clock: a picture's age is judged by the simulation time it was taken at, not by when it arrived.
@@ -149,9 +159,31 @@ class GzCameras:
         lag = self.sim_lag(which)
         return cache[1], age if lag is None else max(age, lag)
 
+    def grab_rgb(self, timeout_s: float = 5.0) -> bool:
+        """Subscribe to the RGB camera until one new picture has arrived, then unsubscribe. -> True if one came."""
+        with self._grab_lock:
+            t_req = time.monotonic()
+            if not self._subscribe(self._Image, self.rgb_topic, self._on_rgb, self._rgb_hz):
+                return False
+            try:
+                while time.monotonic() - t_req < timeout_s:
+                    with self._lock:
+                        if self._rgb_msg is not None and self._rgb_t > t_req:
+                            return True
+                    time.sleep(0.02)
+                return False
+            finally:
+                try:
+                    self.node.unsubscribe(self.rgb_topic)
+                except Exception:  # noqa: BLE001  (bindings without unsubscribe: stays subscribed)
+                    self.rgb_on_demand = False
+
     def rgb(self) -> Tuple[Optional[np.ndarray], float]:
         """(frame, age in s): the larger of the time since it arrived and, when the world clock is known, the
-        simulation time since it was taken. The array is read-only and shared: copy it before changing it."""
+        simulation time since it was taken. The array is read-only and shared: copy it before changing it.
+        With rgb_on_demand (default) this first fetches a new picture (takes up to a few tenths of a second)."""
+        if self.rgb_on_demand:
+            self.grab_rgb()
         return self._get("rgb")
 
     def depth(self) -> Tuple[Optional[np.ndarray], float]:

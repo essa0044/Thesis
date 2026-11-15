@@ -69,6 +69,14 @@ def _fake_gz(monkeypatch, with_options):
     class Node:
         def subscribe(self, msg_type, topic, cb, *opts):
             subs[topic] = (cb, opts)
+            hook = subs.get("_on_subscribe")
+            if hook:
+                hook(topic, cb)
+            return True
+
+        def unsubscribe(self, topic):
+            subs.pop(topic, None)
+            subs.setdefault("_unsubscribed", []).append(topic)
             return True
 
     class SubscribeOptions:
@@ -89,7 +97,7 @@ def _fake_gz(monkeypatch, with_options):
 def test_gz_cameras_throttle_and_decode_lazily(monkeypatch):
     for with_options in (True, False):
         subs = _fake_gz(monkeypatch, with_options)
-        cams = gc.GzCameras(rgb_topic="/rgb", depth_topic="/depth", rgb_hz=5, depth_hz=20)
+        cams = gc.GzCameras(rgb_topic="/rgb", depth_topic="/depth", rgb_hz=5, depth_hz=20, rgb_on_demand=False)
         assert cams.throttled is with_options
         if with_options:
             assert subs["/rgb"][1][0].msgs_per_sec == 5 and subs["/depth"][1][0].msgs_per_sec == 20
@@ -127,3 +135,20 @@ def test_gz_cameras_judge_age_by_simulation_time(monkeypatch):
     subs["/world/w/clock"][0](types.SimpleNamespace(sim=types.SimpleNamespace(sec=16, nsec=0)))
     _, age = cams.depth()
     assert age > 5.9  # same picture, simulation 6 s further: late
+
+
+def test_gz_cameras_fetch_rgb_only_on_demand(monkeypatch):
+    import threading as _th
+    subs = _fake_gz(monkeypatch, True)
+    cams = gc.GzCameras(rgb_topic="/world/w/model/x/image", depth_topic="/depth")
+    assert "/world/w/model/x/image" not in subs and "/depth" in subs  # RGB not subscribed until wanted
+    rgb = np.full((3, 4, 3), 9, np.uint8)
+    m = types.SimpleNamespace(width=4, height=3, data=rgb.tobytes(), pixel_format_type=3)
+
+    def deliver(topic, cb):
+        if topic.endswith("/image"):
+            _th.Timer(0.05, cb, args=(m,)).start()
+    subs["_on_subscribe"] = deliver
+    img, _ = cams.rgb()
+    assert (img == 9).all()
+    assert subs["_unsubscribed"] == ["/world/w/model/x/image"] and "/world/w/model/x/image" not in subs
