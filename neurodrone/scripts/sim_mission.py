@@ -68,13 +68,31 @@ class VlmWorker(threading.Thread):
         self.goal = None
         self.last = {}
         self.stop = False
+        # Set by the control loop while the search turns the drone: no picture is taken then, and the first picture
+        # after the turn must be newer than release_t. Without this, the picture for the next VLM call was taken
+        # right after the previous answer, while the drone was still turning to the next view; the search had to throw
+        # that answer away, so every view cost two answers (~100 s instead of ~50 s on the laptop CPU).
+        self.hold = False
+        self.release_t = 0.0
+
+    def _wait_for_still_picture(self, max_wait_s: float = 30.0):
+        t_start = time.monotonic()
+        while self.hold and not self.stop and time.monotonic() - t_start < max_wait_s:
+            time.sleep(0.05)
+        while True:
+            rgb, age = self.cams.rgb()
+            if rgb is None or self.stop or time.monotonic() - t_start > max_wait_s:
+                return rgb, age
+            if time.monotonic() - age >= self.release_t:  # taken after the drone stopped turning
+                return rgb, age
+            time.sleep(0.1)
 
     def run(self):
         from neurodrone.gz_camera import DEPTH_CAM, RGB_CAM
         k = 0
         while not self.stop:
+            rgb, age = self._wait_for_still_picture()
             t0 = time.monotonic()
-            rgb, age = self.cams.rgb()
             t_capture = t0 - (age if age != float("inf") else 0.0)
             depth, dage = self.cams.depth()
             state = self.get_state()
@@ -115,7 +133,9 @@ class VlmWorker(threading.Thread):
             if self.a.save_frames:
                 save_frame(self.a.save_frames, k, rgb, box, text)
             k += 1
-            time.sleep(max(0.0, self.a.vlm_period - (time.monotonic() - t0)))
+            # at least 0.25 s: the control loop needs a step or two to act on this answer (start a turn, set hold)
+            # before the next picture is taken
+            time.sleep(max(0.25, self.a.vlm_period - (time.monotonic() - t0)))
 
 
 def save_frame(d, k, rgb, box, text):
@@ -190,11 +210,16 @@ async def main_async(a):
             else:
                 cmd, g = avoider.step(cmd, depth, DEPTH_CAM, dage, time.monotonic(), radius_m=a.radius,
                                       stop_dist_m=a.stop_dist, ttc_s=a.ttc, att_deg=(s.roll_deg, s.pitch_deg))
+            turning = False
             if cmd.phase == "search" and a.search_yaw:
                 yr, note = searcher.step(s.yaw_deg, time.monotonic(), w.last)
                 cmd = M.Command(0, 0, M.hold_altitude(s.down_m, a.alt), yr, "search", note)
+                turning = abs(yr) > 0.5
             elif cmd.phase == "search":
                 cmd = M.Command(0, 0, M.hold_altitude(s.down_m, a.alt), 0.0, "search", cmd.note)
+            if w.hold and not turning:
+                w.release_t = time.monotonic()
+            w.hold = turning
             await veh.send_velocity(VelocityCmd(cmd.vx, cmd.vy, cmd.vz, cmd.yaw_rate))
             log.log("ctl", phase=cmd.phase, note=cmd.note, depth_frozen=watchdog.frozen, depth_age=round(dage, 3)
                     if dage != float("inf") else None, vx=cmd.vx, vy=cmd.vy, yaw_rate=cmd.yaw_rate, n=s.north_m, e=s.east_m,

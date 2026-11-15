@@ -152,3 +152,30 @@ def test_gz_cameras_fetch_rgb_only_on_demand(monkeypatch):
     img, _ = cams.rgb()
     assert (img == 9).all()
     assert subs["_unsubscribed"] == ["/world/w/model/x/image"] and "/world/w/model/x/image" not in subs
+
+
+def test_vlm_worker_waits_while_the_search_turns(monkeypatch):
+    calls = []
+
+    def fake_ask(url, model, jpeg, instr, timeout=60, num_ctx=2048, num_gpu=None):
+        calls.append(time.monotonic())
+        return '{"found": false}', 0.01
+
+    monkeypatch.setattr(sm, "ask_ollama", fake_ask)
+    a = types.SimpleNamespace(consensus_need=2, consensus_window=3, consensus_tol=1.5, max_side=896, ollama="x", model="m",
+                              instruction="the red box", standoff=1.5, save_frames=None, vlm_period=0.01)
+    st = VehicleState(north_m=0, east_m=0, down_m=-2, yaw_deg=0)
+    w = sm.VlmWorker(a, FakeCams(), lambda: st, NullLogger())
+    w.hold = True
+    w.start()
+    time.sleep(0.5)
+    assert calls == []  # no picture while turning
+    w.release_t = time.monotonic() - 1.0
+    w.hold = False
+    t_rel = time.monotonic()
+    t0 = time.monotonic()
+    while not calls and time.monotonic() - t0 < 5:
+        time.sleep(0.02)
+    w.stop = True
+    w.join(timeout=5)
+    assert calls and calls[0] >= t_rel
