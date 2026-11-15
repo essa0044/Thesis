@@ -192,7 +192,9 @@ async def main_async(a):
                                       stop_dist_m=a.stop_dist, ttc_s=a.ttc, att_deg=(s.roll_deg, s.pitch_deg))
             if cmd.phase == "search" and a.search_yaw:
                 yr, note = searcher.step(s.yaw_deg, time.monotonic(), w.last)
-                cmd = M.Command(0, 0, 0, yr, "search", note)
+                cmd = M.Command(0, 0, M.hold_altitude(s.down_m, a.alt), yr, "search", note)
+            elif cmd.phase == "search":
+                cmd = M.Command(0, 0, M.hold_altitude(s.down_m, a.alt), 0.0, "search", cmd.note)
             await veh.send_velocity(VelocityCmd(cmd.vx, cmd.vy, cmd.vz, cmd.yaw_rate))
             log.log("ctl", phase=cmd.phase, note=cmd.note, depth_frozen=watchdog.frozen, depth_age=round(dage, 3)
                     if dage != float("inf") else None, vx=cmd.vx, vy=cmd.vy, yaw_rate=cmd.yaw_rate, n=s.north_m, e=s.east_m,

@@ -240,6 +240,13 @@ def steer(goal_ned: Optional[np.ndarray], state, vmax: float = 1.0, k_pos: float
     return Command(v, 0, vz, yaw_rate, "fly")
 
 
+def hold_altitude(down_m: float, alt_m: float, k: float = 0.8, vmax: float = 0.5) -> float:
+    """Vertical speed (NED, + = down) that brings the drone back to alt_m. While searching, a velocity command of 0
+    alone let the simulated drone drift by metres over a few minutes (15 Nov: from 1.8 m down to the ground in one
+    run, up to 2.8 m in another); this P-term holds the mission altitude."""
+    return max(-vmax, min(vmax, k * (-alt_m - down_m)))
+
+
 def apply_guard(cmd: Command, g: GuardResult) -> Command:
     if g.blocked and (abs(cmd.vx) > 0 or abs(cmd.vy) > 0):
         return Command(0, 0, cmd.vz, cmd.yaw_rate, "blocked", g.reason)

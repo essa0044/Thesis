@@ -232,3 +232,10 @@ def test_depth_watchdog_flags_a_frozen_picture_only_when_moving():
     img2 = img.copy(); img2[::16, ::16] = 4.0
     assert not w.update(img2, 0.0, 1.0)  # picture changed: fresh again
     assert not w.update(None, 0.0, 5.0)
+
+
+def test_hold_altitude():
+    from neurodrone.mission import hold_altitude
+    assert hold_altitude(-2.0, 2.0) == 0.0
+    assert hold_altitude(0.0, 2.0) == -0.5  # on the ground: climb (NED up = negative), capped
+    assert 0 < hold_altitude(-2.3, 2.0) < 0.5  # 30 cm too high: descend slowly
