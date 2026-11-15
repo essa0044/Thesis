@@ -29,6 +29,12 @@ SEARCH="${SEARCH:-sweep}"       # sweep (fixed headings) or active (active sensi
 NUM_CTX="${NUM_CTX:-2048}"      # same in the warm-up and every call, or Ollama reloads the model
 NUM_GPU="${NUM_GPU:-}"          # model layers on the GPU (0 = CPU only); empty = Ollama decides
 GPU_ARG=(); [ -n "$NUM_GPU" ] && GPU_ARG=(--num-gpu "$NUM_GPU")
+# Gazebo's renderer under WSL: force Mesa's d3d12 driver on a named GPU. Without this, Mesa fell back to llvmpipe (CPU)
+# after a Windows update (15 Nov) and the depth pictures came 5-6 s late. GZ_GPU=NVIDIA (default), Intel, or none.
+GZ_GPU="${GZ_GPU:-NVIDIA}"
+if [ "$GZ_GPU" != none ] && [ -e /dev/dxg ]; then
+  export GALLIUM_DRIVER=d3d12 MESA_D3D12_DEFAULT_ADAPTER_NAME="$GZ_GPU"
+fi
 VLM_MAX_MEDIAN="${VLM_MAX_MEDIAN:-120}"  # flag (TOO SLOW) if the first-run VLM check takes longer than this (s)
 
 mkdir -p "$OUT/px4" "$OUT/frames"
@@ -40,6 +46,7 @@ curl -s --max-time 5 "$OLLAMA/api/version" >/dev/null || { echo "no Ollama at $O
   echo "ollama: $(curl -s "$OLLAMA/api/version")"; echo "model: $MODEL"
   echo "runs: $RUNS  worlds: $WORLDS  targets: $TARGETS  max_time: $MAX_TIME  search: $SEARCH  num_gpu: ${NUM_GPU:-auto}  search_yaw: $SEARCH_YAW  headless: $HEADLESS"
   command -v nvidia-smi >/dev/null && nvidia-smi --query-gpu=name,driver_version --format=csv,noheader
+  echo "gazebo renderer: $(glxinfo -B 2>/dev/null | grep -E 'OpenGL renderer string' | cut -d: -f2-) (GZ_GPU=$GZ_GPU)"
 } >> "$OUT/run_info.txt"   # appended: a resumed series (same OUT) keeps the earlier info
 cat "$OUT/run_info.txt"
 
