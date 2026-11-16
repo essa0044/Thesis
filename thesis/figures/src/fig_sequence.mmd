@@ -1,0 +1,23 @@
+sequenceDiagram
+  autonumber
+  participant Cam as Camera
+  participant W as VLM worker
+  participant V as VLM server
+  participant L as Control loop (20 Hz)
+  participant P as PX4
+  Note over L,P: take-off, OFFBOARD
+  loop every 50 ms
+    P->>L: position, velocity, attitude
+    Cam->>L: newest depth image + time stamp
+    L->>L: search / steer → velocity, depth guard (fresh? frozen? corridor free?)
+    L->>P: body velocity setpoint
+  end
+  L-->>W: release (search holds still)
+  Cam->>W: RGB picture taken after the turn + pose
+  W->>V: picture (896 px) + instruction
+  Note over W,V: 0.6 s (GPU) to 50 s (laptop CPU)
+  V-->>W: {"found": true, "box": [...]}
+  W->>W: box at image edge: no goal, otherwise median depth → 3-D goal
+  W-->>L: goal candidate / "not found"
+  L->>L: consensus (2 of 3) → accepted goal, or next view
+  Note over L,P: fly to goal, arrive, land

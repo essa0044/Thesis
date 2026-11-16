@@ -1,0 +1,12 @@
+flowchart LR
+  BAT["4S LiPo 5000 mAh"] ==>|"XT90→XT60"| PDB["Power board (X500 V2)"]
+  PDB ==> ESC["4 × ESC + motors"]
+  PDB ==>|"power module"| FC["Pixhawk 6C<br/>PX4 · EKF2"]
+  PDB ==>|"XT30 → 5.5×2.5 mm barrel"| J["Jetson Orin Nano Super 8 GB<br/>NVMe SSD 500 GB<br/>VLM · mission code · VIO"]
+  RS["RealSense D435i<br/>RGB · depth · IR · IMU"] -->|"USB 3"| J
+  J <-->|"USB (MAVLink)"| FC
+  GPS["M10 GPS (unused indoors)"] -.-> FC
+  RC["RC receiver<br/>safety pilot"] --> FC
+  FC --> ESC
+  linkStyle 0,1,2,3 stroke:#e34948,stroke-width:2px
+  linkStyle 4,5 stroke:#2a78d6,stroke-width:2px

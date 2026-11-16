@@ -1,0 +1,36 @@
+flowchart TB
+  subgraph CAM["RGB-D camera — RealSense D435i (Gazebo camera in simulation)"]
+    RGB["RGB image"]
+    DEP["Depth image"]
+    IRI["IR images + IMU"]
+  end
+  subgraph CC["Companion computer — Jetson Orin Nano (laptop WSL in simulation)"]
+    VW["VLM worker<br/>picture → prompt → JSON box"]
+    VLMA["VLM server, pipeline A<br/>Qwen3-VL-4B q4"]
+    G3["3-D goal<br/>box + median depth"]
+    CON["Consensus<br/>2 of 3 answers agree"]
+    SR["Search<br/>sweep or active"]
+    CL["Control loop, 20 Hz<br/>steer · hold altitude"]
+    GD["Depth guard + go-around<br/>stale / frozen depth check"]
+    VIO["Visual-inertial odometry"]
+  end
+  subgraph GS["Ground station — pipeline B"]
+    VLMB["VLM server<br/>larger model"]
+  end
+  subgraph FC["Pixhawk 6C — PX4 (SITL in simulation)"]
+    EKF["EKF2 estimator"]
+    CTRL["Velocity and attitude control"]
+  end
+  RGB --> VW
+  VW <-->|"A: HTTP on board"| VLMA
+  VW <-.->|"B: video stream down, goals up"| VLMB
+  VW --> G3
+  DEP --> G3
+  G3 --> CON --> CL
+  SR --> CL
+  VW --> SR
+  DEP --> GD
+  CL -->|"commanded velocity"| GD
+  GD -->|"MAVLink OFFBOARD velocity setpoints"| CTRL
+  EKF -->|"pose, velocity, attitude"| CL
+  IRI --> VIO -->|"MAVLink odometry"| EKF
