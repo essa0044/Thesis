@@ -25,19 +25,31 @@ class Pinhole:
     width: int
     height: int
     hfov_rad: float
+    cx: Optional[float] = None  # principal point (pixels); None = image centre (Gazebo). A real camera's comes from
+    cy: Optional[float] = None  # its calibration (RealSense: intrinsics.ppx / ppy), see Pinhole.from_intrinsics
+
+    @classmethod
+    def from_intrinsics(cls, width: int, height: int, fx: float, ppx: float, ppy: float) -> "Pinhole":
+        return cls(width, height, 2.0 * math.atan(width / (2.0 * fx)), ppx, ppy)
 
     @property
     def f(self) -> float:
         return (self.width / 2.0) / math.tan(self.hfov_rad / 2.0)
 
+    @property
+    def c(self) -> Tuple[float, float]:
+        return (self.width / 2.0 if self.cx is None else self.cx, self.height / 2.0 if self.cy is None else self.cy)
+
     def ray(self, u: float, v: float) -> np.ndarray:
         """Unit-depth ray (body FRD, x = 1) through pixel (u, v) (pixel centres at +0.5)."""
-        return np.array([1.0, (u - self.width / 2.0) / self.f, (v - self.height / 2.0) / self.f])
+        cx, cy = self.c
+        return np.array([1.0, (u - cx) / self.f, (v - cy) / self.f])
 
     def pixel(self, p_frd: np.ndarray) -> Optional[Tuple[float, float]]:
         if p_frd[0] <= 1e-6:
             return None
-        return (p_frd[1] / p_frd[0] * self.f + self.width / 2.0, p_frd[2] / p_frd[0] * self.f + self.height / 2.0)
+        cx, cy = self.c
+        return (p_frd[1] / p_frd[0] * self.f + cx, p_frd[2] / p_frd[0] * self.f + cy)
 
 
 def R_ned_from_frd(roll_deg: float, pitch_deg: float, yaw_deg: float) -> np.ndarray:

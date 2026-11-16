@@ -15,47 +15,29 @@ Logs every step to a JSONL file; --save-frames writes the VLM images with the bo
 import _path  # noqa: F401
 import argparse
 import asyncio
-import base64
 import json
 import math
 import os
 import sys
 import threading
 import time
-import urllib.error
-import urllib.request
 
 import numpy as np
 
 from neurodrone import mission as M
+from neurodrone.ollama import chat as ollama_chat
 from neurodrone.telemetry import JsonlLogger
 from neurodrone.types import VehicleState, VelocityCmd
-from neurodrone.vlm import build_prompt, encode_jpeg, parse_goal
+from neurodrone.vlm import encode_jpeg, parse_goal
 
 
 def ask_ollama(url, model, jpeg, instruction, timeout=240, num_ctx=2048, num_gpu=None):
-    """One VLM call. num_ctx must be the same in every call (and in scripts/vlm_warmup.py): a different value makes
-    Ollama reload the model. The timeout is long on purpose: when the client gives up, Ollama still finishes that
-    request, so the next one waits behind it and times out too."""
-    body = {"model": model, "stream": False, "think": False, "keep_alive": "60m",
-            "options": {"temperature": 0, "num_predict": 128, "num_ctx": num_ctx},
-            "messages": [{"role": "user", "content": build_prompt(instruction), "images": [base64.b64encode(jpeg).decode()]}]}
-    if num_gpu is not None:  # model layers on the GPU (0 = CPU only); must match the load, or Ollama reloads
-        body["options"]["num_gpu"] = int(num_gpu)
-    req = urllib.request.Request(url.rstrip("/") + "/api/chat", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
-    t0 = time.monotonic()
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            data = json.loads(r.read())
-    except urllib.error.HTTPError as e:  # models without a thinking switch reject "think"
-        if e.code == 400 and "think" in e.read().decode(errors="replace").lower():
-            body.pop("think")
-            req = urllib.request.Request(req.full_url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                data = json.loads(r.read())
-        else:
-            raise
-    return (data.get("message") or {}).get("content") or "", time.monotonic() - t0
+    """One VLM call -> (text, latency_s). num_ctx must be the same in every call (and in scripts/vlm_warmup.py): a
+    different value makes Ollama reload the model. The timeout is long on purpose: when the client gives up, Ollama
+    still finishes that request, so the next one waits behind it and times out too. (neurodrone.ollama.chat also
+    returns Ollama's prefill/decode split.)"""
+    r = ollama_chat(url, model, jpeg, instruction, timeout=timeout, num_ctx=num_ctx, num_gpu=num_gpu)
+    return r["text"], r["latency_s"]
 
 
 class VlmWorker(threading.Thread):

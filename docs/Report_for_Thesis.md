@@ -1085,6 +1085,13 @@ Each stage changes one or two things compared with the one before and has a pass
 
 Stages 1–5 need no flying and can start the day the hardware arrives; stage 3 also gives the real-depth data for the sim-to-real question even if flights are delayed.
 
+**Day-one tools (16 Nov, `jetson/README.md`).** Written and tested on fakes (camera, Ollama, PX4; 47 tests pass), not yet on the real board:
+- Stage 1: `neurodrone/scripts/jetson_vlm_bench.py all` - board and model info (model digest must match the workstation's 84f7ed8042fa), cold start, 50 answers on new pictures, 30-min soak with `tegrastats` (memory, temperatures, GPU clock, power), accuracy on RefDrone test (all queries) and gRefCOCO val (seed 0) at 896 px through `bench_grounding.py --api ollama` (now in the repository), and a report with the pass checks. Every answer is split into prefill (prompt + image) and decode (answer) from Ollama's own timers (`neurodrone/ollama.py`); `vlm_warmup.py` prints the same split.
+- Stage 3: `realsense_bench.py` - depth vs tape with the dot projector on and off (error, noise, fill, sigma = a Z^2), VLM on the lab objects with a review sheet and scoring (found, wrong object, not found when absent, distance from box + depth vs tape), the guard on live depth (stop distance, false stops), frame age and IMU attitude check.
+- Stage 4: `record_replay.py` - records colour, aligned depth, IMU and typed marks (`d=4.0`, `o=1.5`, `absent`) as plain files; replays them through the mission's own functions (guard every frame; VLM -> box -> edge rule -> depth -> goal -> consensus) and compares with the marks.
+- Stage 6: `jetson/setup_vio.sh` (Bernas's set-up scripted: MAXN SUPER, Docker NVIDIA runtime, CDI, udev rules, isaac_ros_common release-3.2, VSLAM-UAV pinned at 037198f, MAVROS image), `jetson/vio/run_mavros_vio.sh` (MAVROS + pose relay only - Bernas's own launch file also starts an OFFBOARD flight-pattern node), `px4_params.py` (his PX4 parameters + `EKF2_EV_CTRL`, read/compare/apply, or `param set` lines), `vio_check.py` (drift on a floor mark, hold spread, VIO rate with the VLM running).
+- Found while writing them: **only one process can own the D435i.** Once the VIO runs, the mission must read colour and depth from the RealSense ROS 2 node instead of opening the camera; `jetson/vio/nd_vslam_realsense.py` switches those streams on (untested), and a ROS 2 camera class for the mission is still to be written. With the dot projector off for the VIO, the guard's depth on plain walls is the open risk stage 3 measures.
+
 ## 19. Open questions and sources
 
 **Open questions.**

@@ -7,8 +7,9 @@
 Ollama decides at load time how many layers go to the GPU, from the GPU memory free at that moment. Loaded while
 Gazebo is running on a 4 GB laptop GPU, Qwen3-VL-4B ended up 54 % on the CPU and every call took more than 60 s
 (12 Nov). So: unload, load again with the same num_ctx and keep_alive the missions use (a different num_ctx makes Ollama
-reload), then time calls on 1920 x 1080 test images (a red box on grey, a new picture every call, sent at --max-side
+reload), then time calls (total, and Ollama's prefill/decode split) on 1920 x 1080 test images (a red box on grey, a new picture every call, sent at --max-side
 like the missions).
+The full stage-1 bench on the Jetson (30-min soak, tegrastats, accuracy) is scripts/jetson_vlm_bench.py.
 """
 import _path  # noqa: F401
 import argparse
@@ -21,7 +22,7 @@ import urllib.request
 import numpy as np
 
 from neurodrone.vlm import encode_jpeg
-from sim_mission import ask_ollama
+from neurodrone.ollama import chat
 
 
 def post(url, body, timeout=300):
@@ -77,15 +78,18 @@ def main(argv=None):
     share, size = gpu_share(base, a.model)
     if share is not None:
         print(f"on the GPU: {100 * share:.0f} % of {size / 1e9:.1f} GB (rest on the CPU)", flush=True)
-    lat = []
+    lat, split = [], []
     for i in range(a.calls):
         jpeg, _ = encode_jpeg(test_image(int(time.time() * 1000) % 100000 + i), max_side=a.max_side, quality=90)
-        text, t = ask_ollama(a.ollama, a.model, jpeg, "the red box", num_ctx=a.num_ctx, num_gpu=a.num_gpu)
+        r = chat(a.ollama, a.model, jpeg, "the red box", num_ctx=a.num_ctx, num_gpu=a.num_gpu)
+        t, text = r["latency_s"], r["text"]
         lat.append(t)
-        print(f"call {i + 1}: {t:.1f} s  {text.strip()[:80]}", flush=True)
+        split.append((r.get("prefill_s"), r.get("decode_s")))
+        print(f"call {i + 1}: {t:.1f} s (prefill {r.get('prefill_s') or 0:.2f} s for {r.get('prefill_tokens')} tokens, "
+              f"decode {r.get('decode_s') or 0:.2f} s)  {text.strip()[:80]}", flush=True)
     med = statistics.median(lat)
     print(f"median {med:.1f} s", flush=True)
-    print(json.dumps(dict(gpu_share=share, size_bytes=size, latencies_s=[round(x, 2) for x in lat], num_ctx=a.num_ctx,
+    print(json.dumps(dict(gpu_share=share, size_bytes=size, latencies_s=[round(x, 2) for x in lat], prefill_decode_s=split, num_ctx=a.num_ctx,
                           num_gpu=a.num_gpu,
                           max_side=a.max_side, model=a.model)))
     if a.max_median is not None and med > a.max_median:
