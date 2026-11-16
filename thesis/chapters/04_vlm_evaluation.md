@@ -12,15 +12,15 @@ Table: Data sets of the VLM benchmark. {#tbl:datasets}
 
 | Data set | Content | Split used | Scored samples |
 |---|---|---|---|
-| RefCOCO (UNC) [@refcoco] | COCO photographs with referring expressions, one object each | testA, testB | 5,607 and 5,045 (full); 500 per split in the side studies |
-| gRefCOCO [@grefcoco] | RefCOCO images with expressions that refer to no object or several | val | 4,187 (full) |
-| RefDrone [@refdrone] | VisDrone drone photographs with referring expressions | test, single- and no-target | 1,254 targets + 152 no-target; 84 % of the targets cover less than 1 % of the image |
+| RefCOCO (UNC) [@yu2016refcoco] | COCO photographs with referring expressions, one object each | testA, testB | 5,607 and 5,045 (full); 500 per split in the side studies |
+| gRefCOCO [@liu2023gres] | RefCOCO images with expressions that refer to no object or several | val | 4,187 (full) |
+| RefDrone [@sun2025refdrone] | VisDrone drone photographs with referring expressions | test, single- and no-target | 1,254 targets + 152 no-target; 84 % of the targets cover less than 1 % of the image |
 
 RefDrone is the closest public match to the drone's task: views from a drone, small objects, and expressions that sometimes describe nothing in the picture. RefCOCO and gRefCOCO are the standard grounding benchmarks on everyday photographs and allow a check against published numbers.
 
 **Prompt, parser and metrics.** Every model received the drone prompt of Chapter @sec:design (system message: "You are the visual grounding module of a small drone. You reply with ONE JSON object and nothing else."), temperature 0. The models do not answer in the requested 0–1 coordinates (Qwen3-VL uses 0–1000, Qwen2.5-VL pixels of the image as the server resized it), so the first 50 samples of each task select each model's convention and are never scored. The main metric is the standard accuracy at intersection-over-union (IoU) ≥ 0.5 on samples whose target is present. For samples without a target, the share answered "not found" is reported: a model that draws a box for an object that is not there sends a drone to the wrong place. Latency is the median time per request. 95 % confidence intervals use the Wilson score interval; with 500 samples they are about ±3–4 points, with the full RefDrone set about ±3 points.
 
-**Models.** Ollama's q4_K_M (4-bit) builds of the Qwen3-VL Instruct models [@qwen3vl] at 2, 4 and 8 billion parameters (B) were the main candidates; the "thinking" tags were not used. For comparison: Qwen2.5-VL-3B [@qwen25vl], the Qwen3.5 models (0.8 B–9 B), Gemma 4 (E2B, E4B, 12 B), LFM3-VL 2B, Bonsai-2, Nemotron-3.5-Bolt E4B, and two large reference models that do not fit an 8 GB computer: Qwen3-VL-30B-A3B (a mixture of experts with 3 B active parameters) and Qwen3-VL-32B.
+**Models.** Ollama's q4_K_M (4-bit) builds of the Qwen3-VL Instruct models [@bai2025qwen3vl] at 2, 4 and 8 billion parameters (B) were the main candidates; the "thinking" tags were not used. For comparison: Qwen2.5-VL-3B [@bai2025qwen25vl], the Qwen3.5 models (0.8 B–9 B), Gemma 4 (E2B, E4B, 12 B), LFM3-VL 2B, Bonsai-2, Nemotron-3.5-Bolt E4B, and two large reference models that do not fit an 8 GB computer: Qwen3-VL-30B-A3B (a mixture of experts with 3 B active parameters) and Qwen3-VL-32B.
 
 ## Model size
 
@@ -47,7 +47,7 @@ The large reference models confirm that the limit on drone images is not model s
 
 **The 4B model's weakness is invented objects.** When the described object is not in the drone image, Qwen3-VL-4B still draws a box in about half of the cases; the 2B and 8B models do so in about a quarter. This is the main reason for the consensus rule of Chapter 3: a goal is accepted only when two of three answers agree on the same place.
 
-**Our numbers against the published ones.** The Qwen3-VL technical report gives a RefCOCO average (RefCOCO, RefCOCO+ and RefCOCOg, full precision, the model's own prompt) of 85.6 / 89.0 / 89.1 % for 2B / 4B / 8B [@qwen3vl]. The mean of our testA and testB results is 80.8 / 87.0 / 86.3 %: the same order, 2–5 points lower, as expected with a 4-bit model, a prompt that allows "not found", and a subset of the splits. For Qwen2.5-VL-3B the gap to its published scores [@qwen25vl] was much larger (46–59 % against 84–92 %), and came from refusals, not from wrong boxes: it answered "not found" for 33–49 % of the present targets, and 84–89 % of the boxes it did draw were correct. A prompt that allows "not found" is therefore not neutral; models differ in how willing they are to use it.
+**Our numbers against the published ones.** The Qwen3-VL technical report gives a RefCOCO average (RefCOCO, RefCOCO+ and RefCOCOg, full precision, the model's own prompt) of 85.6 / 89.0 / 89.1 % for 2B / 4B / 8B [@bai2025qwen3vl]. The mean of our testA and testB results is 80.8 / 87.0 / 86.3 %: the same order, 2–5 points lower, as expected with a 4-bit model, a prompt that allows "not found", and a subset of the splits. For Qwen2.5-VL-3B the gap to its published scores [@bai2025qwen25vl] was much larger (46–59 % against 84–92 %), and came from refusals, not from wrong boxes: it answered "not found" for 33–49 % of the present targets, and 84–89 % of the boxes it did draw were correct. A prompt that allows "not found" is therefore not neutral; models differ in how willing they are to use it.
 
 ## Quantisation
 

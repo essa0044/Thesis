@@ -1,63 +1,3 @@
-% Core references used in chapters 3-8 (checked 16 Nov 2026).
-% references.bib = this file + the related-work entries (docs/related_work/references.bib).
-
-@misc{tayar2026vln,
-  author = {Tayar, Marco S. and Tommaselli, Felipe and Capezutto, Gianluca and Saraiva, Pedro Antonio Rabelo and de Freitas, Pedro H. V. and Kido, Lucas and Sonego, Guilherme and Godoy, Ricardo V. and Becker, Marcelo},
-  title = {{VLN} on the Fly: An Onboard Vision-Language Navigation Stack for Aerial Robots},
-  year = {2026},
-  howpublished = {arXiv:2609.20191},
-  url = {https://arxiv.org/abs/2609.20191}
-}
-
-@misc{qwen3vl,
-  author = {Bai, Shuai and Cai, Yuxuan and Chen, Ruizhe and others},
-  title = {{Qwen3-VL} Technical Report},
-  year = {2025},
-  howpublished = {arXiv:2511.21631},
-  url = {https://arxiv.org/abs/2511.21631}
-}
-
-@misc{qwen25vl,
-  author = {Bai, Shuai and Chen, Keqin and Liu, Xuejing and others},
-  title = {{Qwen2.5-VL} Technical Report},
-  year = {2025},
-  howpublished = {arXiv:2502.13923},
-  url = {https://arxiv.org/abs/2502.13923}
-}
-
-@inproceedings{refcoco,
-  author = {Yu, Licheng and Poirson, Patrick and Yang, Shan and Berg, Alexander C. and Berg, Tamara L.},
-  title = {Modeling Context in Referring Expressions},
-  booktitle = {Computer Vision -- ECCV 2016},
-  pages = {69--85},
-  year = {2016},
-  publisher = {Springer}
-}
-
-@inproceedings{grefcoco,
-  author = {Liu, Chang and Ding, Henghui and Jiang, Xudong},
-  title = {{GRES}: Generalized Referring Expression Segmentation},
-  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-  pages = {23592--23601},
-  year = {2023}
-}
-
-@misc{refdrone,
-  author = {Sun, Zhichao and Liu, Yepeng and Su, Zhiling and Zhu, Huachao and Gu, Yuliang and Zou, Yuda and Liu, Zelong and Xia, Gui-Song and Du, Bo and Xu, Yongchao},
-  title = {{RefDrone}: A Challenging Benchmark for Referring Expression Comprehension in Drone Scenes},
-  year = {2025},
-  howpublished = {arXiv:2502.00392},
-  url = {https://arxiv.org/abs/2502.00392}
-}
-
-@inproceedings{px4,
-  author = {Meier, Lorenz and Honegger, Dominik and Pollefeys, Marc},
-  title = {{PX4}: A Node-Based Multithreaded Open Source Robotics Framework for Deeply Embedded Platforms},
-  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
-  pages = {6235--6240},
-  year = {2015}
-}
-
 @inproceedings{gazebo,
   author = {Koenig, Nathan and Howard, Andrew},
   title = {Design and Use Paradigms for {Gazebo}, an Open-Source Multi-Robot Simulator},
@@ -65,34 +5,6 @@
   volume = {3},
   pages = {2149--2154},
   year = {2004}
-}
-
-@inproceedings{openvins,
-  author = {Geneva, Patrick and Eckenhoff, Kevin and Lee, Woosik and Yang, Yulin and Huang, Guoquan},
-  title = {{OpenVINS}: A Research Platform for Visual-Inertial Estimation},
-  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
-  pages = {4666--4672},
-  year = {2020}
-}
-
-@article{bajcsy1988,
-  author = {Bajcsy, Ruzena},
-  title = {Active Perception},
-  journal = {Proceedings of the IEEE},
-  volume = {76},
-  number = {8},
-  pages = {966--1005},
-  year = {1988}
-}
-
-@article{aloimonos1988,
-  author = {Aloimonos, John and Weiss, Isaac and Bandyopadhyay, Amit},
-  title = {Active Vision},
-  journal = {International Journal of Computer Vision},
-  volume = {1},
-  number = {4},
-  pages = {333--356},
-  year = {1988}
 }
 
 @misc{ollama,
@@ -103,14 +15,6 @@
   url = {https://github.com/ollama/ollama}
 }
 
-@misc{llamacpp,
-  author = {Gerganov, Georgi and others},
-  title = {llama.cpp: {LLM} inference in {C/C++}},
-  year = {2026},
-  howpublished = {Software},
-  url = {https://github.com/ggml-org/llama.cpp}
-}
-
 @misc{mavsdk,
   author = {{Dronecode Foundation}},
   title = {{MAVSDK}: {MAVLink} {SDK} for drones},
@@ -119,9 +23,825 @@
   url = {https://mavsdk.mavlink.io}
 }
 
-@misc{px4vio,
-  author = {{PX4 Development Team}},
-  title = {Visual Inertial Odometry ({VIO}) -- {PX4} User Guide (v1.17)},
-  year = {2026},
-  url = {https://docs.px4.io/v1.17/en/computer_vision/visual_inertial_odometry.html}
+@misc{tayar2026vln,
+  title         = {{VLN} on the Fly: An Onboard Vision-Language Navigation Stack for Aerial Robots},
+  author        = {Tayar, Marco S. and Tommaselli, Felipe and Capezutto, Gianluca and Saraiva, Pedro Antonio Rabelo and de Freitas, Pedro H. V. and Kido, Lucas and Sonego, Guilherme and Godoy, Ricardo V. and Becker, Marcelo},
+  year          = {2026},
+  eprint        = {2609.20191},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2609.20191},
+}
+
+@misc{zheng2026onfly,
+  title         = {{OnFly}: Onboard Zero-Shot Aerial Vision-Language Navigation toward Safety and Efficiency},
+  author        = {Zheng, Guiyong and Ban, Yueting and Zhang, Mingjie and Zheng, Juepeng and Zhou, Boyu},
+  year          = {2026},
+  eprint        = {2603.10682},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2603.10682}
+}
+
+@misc{zhang2025vlfly,
+  title         = {Grounded Vision-Language Navigation for {UAVs} with Open-Vocabulary Goal Understanding},
+  author        = {Zhang, Yuhang and Yu, Haosheng and Xiao, Jiaping and Feroskhan, Mir},
+  year          = {2025},
+  eprint        = {2506.10756},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2506.10756},
+}
+
+@misc{chen2026airhunt,
+  title         = {{AirHunt}: Bridging {VLM} Semantics and Continuous Planning for Efficient Aerial Object Navigation},
+  author        = {Chen, Xuecheng and Liu, Zongzhuo and Ma, Jianfa and Du, Bang and Zhang, Tiantian and Wang, Xueqian and Zhou, Boyu},
+  year          = {2026},
+  eprint        = {2601.12742},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2601.12742},
+}
+
+@misc{williams2026litevlah,
+  title         = {{LiteVLA-H}: Dual-Rate Vision-Language-Action Inference for Onboard Aerial Guidance and Semantic Perception},
+  author        = {Williams, Justin and Gupta, Kishor Datta and George, Roy and Sarkar, Mrinmoy},
+  year          = {2026},
+  eprint        = {2605.00884},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2605.00884}
+}
+
+@misc{chen2023typefly,
+  title         = {{TypeFly}: Flying Drones with Large Language Model},
+  author        = {Chen, Guojun and Yu, Xiaojing and Ling, Neiwen and Zhong, Lin},
+  year          = {2023},
+  eprint        = {2312.14950},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2312.14950}
+}
+
+@misc{hu2025spf,
+  title         = {See, Point, Fly: A Learning-Free {VLM} Framework for Universal Unmanned Aerial Navigation},
+  author        = {Hu, Chih Yao and Lin, Yang-Sen and Lee, Yuna and Su, Chih-Hai and Lee, Jie-Ying and Tsai, Shr-Ruei and Lin, Chin-Yang and Chen, Kuan-Wen and Ke, Tsung-Wei and Liu, Yu-Lun},
+  year          = {2025},
+  eprint        = {2509.22653},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2509.22653},
+}
+
+@inproceedings{pardyl2025flysearch,
+  title         = {{FlySearch}: Exploring How Vision-Language Models Explore},
+  author        = {Pardyl, Adam and Matuszek, Dominik and Przebieracz, Mateusz and Cygan, Marek and Zieli{\'n}ski, Bartosz and Wo{\l}czyk, Maciej},
+  booktitle     = {Advances in Neural Information Processing Systems (NeurIPS 2025), Datasets and Benchmarks Track},
+  year          = {2025},
+  eprint        = {2506.02896},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2506.02896}
+}
+
+@inproceedings{liu2023aerialvln,
+  title         = {{AerialVLN}: Vision-and-Language Navigation for {UAVs}},
+  author        = {Liu, Shubo and Zhang, Hongsheng and Qi, Yuankai and Wang, Peng and Zhang, Yaning and Wu, Qi},
+  booktitle     = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  year          = {2023},
+  eprint        = {2308.06735},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2308.06735},
+}
+
+@misc{xiao2025uavon,
+  title         = {{UAV-ON}: A Benchmark for Open-World Object Goal Navigation with Aerial Agents},
+  author        = {Xiao, Jianqiang and Sun, Yuexuan and Shao, Yixin and Gan, Boxi and Liu, Rongqiang and Wu, Yanjin and Guan, Weili and Deng, Xiang},
+  year          = {2025},
+  eprint        = {2508.00288},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2508.00288}
+}
+
+@misc{liu2026openflyv2,
+  title         = {{OpenFlyV2}: An Onboard Vision-Language-Action Model for Aerial Perception and Navigation},
+  author        = {Liu, Junli and You, Zhongrui and Li, Chenhui and Li, Zhen and Tian, Yuyang and Chen, Qizhen and Qu, Delin and Song, Haoming and Wang, Dong and Li, Xuelong and Wang, Zhigang and Zhao, Bin},
+  year          = {2026},
+  eprint        = {2610.39287},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2610.39287}
+}
+
+@article{chen2025gradnav,
+  title         = {{GRaD-Nav++}: Vision-Language Model Enabled Visual Drone Navigation with {Gaussian} Radiance Fields and Differentiable Dynamics},
+  author        = {Chen, Qianzhong and Gao, Naixiang and Huang, Suning and Low, JunEn and Chen, Timothy and Sun, Jiankai and Schwager, Mac},
+  journal       = {IEEE Robotics and Automation Letters},
+  year          = {2025},
+  doi           = {10.1109/LRA.2025.3643290},
+  eprint        = {2506.14009},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2506.14009},
+}
+
+@misc{lim2025takingflight,
+  title         = {Taking Flight with Dialogue: Enabling Natural Language Control for {PX4}-based Drone Agent},
+  author        = {Lim, Shoon Kit and Chong, Melissa Jia Ying and Khor, Jing Huey and Ling, Ting Yang},
+  year          = {2025},
+  eprint        = {2506.07509},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2506.07509}
+}
+
+@misc{xia2026vlnsurvey,
+  title         = {Vision-Language Navigation for Aerial Robots: Towards the Era of Large Language Models},
+  author        = {Xia, Xingyu and Zhou, Lekai and Tang, Yujie and Zhu, Xiaozhou and Zhu, Hai and Yao, Wen},
+  year          = {2026},
+  eprint        = {2604.07705},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2604.07705}
+}
+
+@misc{javaid2024llmuav,
+  title         = {Large Language Models for {UAVs}: Current State and Pathways to the Future},
+  author        = {Javaid, Shumaila and Saeed, Nasir and He, Bin},
+  year          = {2024},
+  eprint        = {2405.01745},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  doi           = {10.48550/arXiv.2405.01745},
+  url           = {https://arxiv.org/abs/2405.01745}
+}
+
+@misc{maalouf2023followanything,
+  title         = {Follow Anything: Open-set Detection, Tracking, and Following in Real-time},
+  author        = {Maalouf, Alaa and Jadhav, Ninad and Jatavallabhula, Krishna Murthy and Chahine, Makram and Vogt, Daniel M. and Wood, Robert J. and Torralba, Antonio and Rus, Daniela},
+  year          = {2023},
+  eprint        = {2308.05737},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2308.05737}
+}
+
+@misc{azimi2026cloudedge,
+  title         = {Cloud, Edge, or Split? {Profiling} Onboard and Split Vision-Language Model Deployment for Drone {AI}},
+  author        = {Azimi, Zoha and Farahani, Reza and Dustdar, Schahram and Timmerer, Christian},
+  year          = {2026},
+  eprint        = {2609.25415},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.DC},
+  url           = {https://arxiv.org/abs/2609.25415}
+}
+
+@misc{bhattacharjya2025avery,
+  title         = {{AVERY}: Intent-Driven Adaptive {VLM} Split Computing via Embodied Self-Awareness for Efficient Disaster Response Systems},
+  author        = {Bhattacharjya, Rajat and Wu, Sing-Yao and Oh, Hyunwoo and Nam, Chaewon and Koo, Suyeon and Imani, Mohsen and Bozorgzadeh, Elaheh and Dutt, Nikil},
+  year          = {2025},
+  eprint        = {2511.18151},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2511.18151}
+}
+
+@article{bajcsy1988active,
+  title   = {Active Perception},
+  author  = {Bajcsy, Ruzena},
+  journal = {Proceedings of the IEEE},
+  volume  = {76},
+  number  = {8},
+  pages   = {966--1005},
+  year    = {1988},
+  doi     = {10.1109/5.5968},
+  url     = {https://doi.org/10.1109/5.5968}
+}
+
+@article{aloimonos1988active,
+  title   = {Active Vision},
+  author  = {Aloimonos, John and Weiss, Isaac and Bandyopadhyay, Amit},
+  journal = {International Journal of Computer Vision},
+  volume  = {1},
+  number  = {4},
+  pages   = {333--356},
+  year    = {1988},
+  doi     = {10.1007/BF00133571},
+  url     = {https://doi.org/10.1007/BF00133571}
+}
+
+@article{tsotsos1992relative,
+  title   = {On the Relative Complexity of Active vs. Passive Visual Search},
+  author  = {Tsotsos, John K.},
+  journal = {International Journal of Computer Vision},
+  volume  = {7},
+  number  = {2},
+  pages   = {127--141},
+  year    = {1992},
+  doi     = {10.1007/BF00128132},
+  url     = {https://link.springer.com/article/10.1007/BF00128132}
+}
+
+@misc{yokoyama2023vlfm,
+  title         = {{VLFM}: Vision-Language Frontier Maps for Zero-Shot Semantic Navigation},
+  author        = {Yokoyama, Naoki and Ha, Sehoon and Batra, Dhruv and Wang, Jiuguang and Bucher, Bernadette},
+  year          = {2023},
+  eprint        = {2312.03275},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2312.03275}
+}
+
+@misc{srivastava2026spatialsemantic,
+  title         = {Spatial-Semantic Uncertainty in {VLM}-Based Target Search: Balancing Exploration and Identification},
+  author        = {Srivastava, Alkesh K. and Diller, Jonathan and Kumar, Vijay and Dames, Philip},
+  year          = {2026},
+  eprint        = {2609.20443},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2609.20443}
+}
+
+@misc{maheshwari2025jetpacksuper,
+  title        = {{NVIDIA JetPack} 6.2 Brings Super Mode to {NVIDIA Jetson Orin Nano} and {Jetson Orin NX} Modules},
+  author       = {Maheshwari, Shashank and Su, Chen},
+  year         = {2025},
+  month        = jan,
+  howpublished = {NVIDIA Technical Blog},
+  url          = {https://developer.nvidia.com/blog/nvidia-jetpack-6-2-brings-super-mode-to-nvidia-jetson-orin-nano-and-jetson-orin-nx-modules},
+  urldate = {2026-11-16},
+}
+
+@misc{nvidia2026trtedgellm,
+  title        = {{TensorRT Edge-LLM}: Performance Benchmarks},
+  author       = {{NVIDIA}},
+  year         = {2026},
+  howpublished = {Online documentation (SDK 0.10.0 results; Orin NX/Orin Nano from the v0.9.0 runtime dashboard)},
+  url          = {https://nvidia.github.io/TensorRT-Edge-LLM/latest/user_guide/performance/performance-benchmarks.html},
+  urldate = {2026-11-16},
+}
+
+@misc{jetsonailab_ollama,
+  title        = {Ollama on {Jetson}},
+  author       = {{NVIDIA Jetson AI Lab}},
+  howpublished = {Jetson AI Lab tutorial},
+  url          = {https://www.jetson-ai-lab.com/tutorials/ollama},
+  urldate = {2026-11-16},
+}
+
+@misc{jetsonailab_genaibench,
+  title        = {{GenAI} Benchmarking: {LLMs} and {VLMs} on {Jetson}},
+  author       = {{NVIDIA Jetson AI Lab}},
+  howpublished = {Jetson AI Lab tutorial},
+  url          = {https://www.jetson-ai-lab.com/tutorials/genai-benchmarking/},
+  urldate = {2026-11-16},
+}
+
+@misc{jetsonailab_nanoowl,
+  title        = {Tutorial -- {NanoOWL}},
+  author       = {{NVIDIA Jetson AI Lab}},
+  howpublished = {Jetson AI Lab tutorial},
+  url          = {https://www.jetson-ai-lab.com/tutorials/nanoowl},
+  urldate = {2026-11-16},
+}
+
+@misc{aufranc2024orinnanosuper,
+  title        = {\$249 {NVIDIA Jetson Orin Nano Super} Developer Kit Targets Generative {AI} Applications at the Edge},
+  author       = {Aufranc, Jean-Luc},
+  year         = {2024},
+  month        = dec,
+  howpublished = {CNX Software},
+  url          = {https://www.cnx-software.com/2024/12/18/249-nvidia-jetson-orin-nano-super-developer-kit-targets-generative-ai-applications-at-the-edge/},
+  urldate = {2026-11-16},
+}
+
+@misc{halfacree_agxorin,
+  title        = {{NVIDIA} Launches 275-{TOPS} {Jetson AGX Orin} Developer's Kit at \$1,999},
+  author       = {Halfacree, Gareth},
+  howpublished = {Hackster.io News},
+  url          = {https://www.hackster.io/news/nvidia-launches-275-tops-jetson-agx-orin-developer-s-kit-at-1-999-bbb5ff80e050},
+  urldate = {2026-11-16},
+}
+
+@misc{adsahu2026orinnanoguide,
+  title        = {{AI} Models That Run on {Jetson Orin Nano Super} (8{GB}) -- A Practical Guide},
+  author       = {{adsahu}},
+  year         = {2026},
+  month        = apr,
+  howpublished = {NVIDIA Developer Forums (community post)},
+  url          = {https://forums.developer.nvidia.com/t/ai-models-that-run-on-jetson-orin-nano-super-8gb-a-practical-guide/365412},
+  urldate = {2026-11-16},
+}
+
+@misc{shin2026smallvlmquant,
+  title         = {Rethinking Small {VLM} Quantization: From Component-Wise Analysis to Hardware-Aware Edge Deployment},
+  author        = {Shin, Hyeju and Kim, Chorwon and Kim, Ryangsoo and Yoo, Hark and Kim, Jaein},
+  year          = {2026},
+  eprint        = {2607.08029},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  url           = {https://arxiv.org/abs/2607.08029}
+}
+
+@misc{seymour2024llmsmall,
+  title         = {Large Language Models on Small Resource-Constrained Systems: Performance Characterization, Analysis and Trade-offs},
+  author        = {Seymour, Liam and Kutukcu, Basar and Baidya, Sabur},
+  year          = {2024},
+  eprint        = {2412.15352},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  url           = {https://arxiv.org/abs/2412.15352}
+}
+
+@misc{islam2025slmenergy,
+  title         = {Characterizing and Understanding Energy Footprint and Efficiency of Small Language Model on Edges},
+  author        = {Islam, Md Romyull and Deng, Bobin and Dhar, Nobel and Nguyen, Tu N. and He, Selena and Shi, Yong and Suo, Kun},
+  year          = {2025},
+  eprint        = {2511.11624},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.DC},
+  url           = {https://arxiv.org/abs/2511.11624}
+}
+
+@misc{khatib2026edgecontinuum,
+  title         = {A Measurement Study of {LLM} Inference Trade-offs Across Edge Continuum Hardware},
+  author        = {Khatib, Maysam and Symeonides, Moysis and Trihinas, Demetris and Pallis, George and Dikaiakos, Marios D.},
+  year          = {2026},
+  eprint        = {2609.08307},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.DC},
+  url           = {https://arxiv.org/abs/2609.08307}
+}
+
+@misc{williams2026litevlaedge,
+  title         = {{LiteVLA-Edge}: Quantized On-Device Multimodal Control for Embedded Robotics},
+  author        = {Williams, Justin and Gupta, Kishor Datta and George, Roy and Sarkar, Mrinmoy},
+  year          = {2026},
+  eprint        = {2603.03380},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2603.03380}
+}
+
+@misc{yang2026eaglevla,
+  title         = {{EagleVLA}: Towards Onboard Real-Time Robot Control via Foresight-Aligned Asynchronous Inference},
+  author        = {Yang, Zebin and Wang, Qi and Wang, Yunhe and Guo, Xiurui and Yu, Bo and Liu, Shaoshan and Xu, Jiafeng and Dong, Hao and Li, Meng},
+  year          = {2026},
+  eprint        = {2607.12659},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2607.12659}
+}
+
+@misc{deng2026edgefm,
+  title         = {{EdgeFM}: Efficient Edge Inference for Vision-Language Models},
+  author        = {Deng, Mengling and Chen, Yuanpeng and Yang, Sheng and others},
+  year          = {2026},
+  eprint        = {2604.27476},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2604.27476}
+}
+
+@misc{ahmad2026vlmedge,
+  title         = {Vision-Language Models on the Edge for Real-Time Robotic Perception},
+  author        = {Ahmad, Sarat and Hafeez, Maryam and Zaidi, Syed Ali Raza},
+  year          = {2026},
+  eprint        = {2601.14921},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2601.14921}
+}
+
+@misc{taherin2025vlascaling,
+  title         = {Cross-Platform Scaling of Vision-Language-Action Models from Edge to Cloud {GPUs}},
+  author        = {Taherin, Amir and Lin, Juyi and Akbari, Arash and Akbari, Arman and Zhao, Pu and Chen, Weiwei and Kaeli, David and Wang, Yanzhi},
+  year          = {2025},
+  eprint        = {2509.11480},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2509.11480}
+}
+
+@misc{ggml_llamacpp,
+  title        = {llama.cpp: {LLM} Inference in {C/C++}},
+  author       = {{ggml-org}},
+  howpublished = {GitHub repository},
+  url          = {https://github.com/ggml-org/llama.cpp},
+  urldate = {2026-11-16},
+}
+
+@misc{patuck2024aikit,
+  title        = {Raspberry {Pi} {AI} Kit Available Now at \$70},
+  author       = {Patuck, Naush},
+  year         = {2024},
+  month        = jun,
+  howpublished = {Raspberry Pi News},
+  url          = {https://www.raspberrypi.com/news/raspberry-pi-ai-kit/},
+  urldate = {2026-11-16},
+}
+
+@misc{patuck2026aihat2,
+  title        = {Introducing the {Raspberry Pi AI HAT+ 2}: Generative {AI} on {Raspberry Pi}},
+  author       = {Patuck, Naush},
+  year         = {2026},
+  month        = jan,
+  howpublished = {Raspberry Pi News},
+  url          = {https://www.raspberrypi.com/news/introducing-the-raspberry-pi-ai-hat-plus-2-generative-ai-on-raspberry-pi/},
+  urldate = {2026-11-16},
+}
+
+@misc{raspberrypi2025pi5brief,
+  title        = {Raspberry {Pi} 5 Product Brief},
+  author       = {{Raspberry Pi Ltd}},
+  year         = {2025},
+  month        = jan,
+  howpublished = {Product brief (PDF, mirrored by SparkFun)},
+  url          = {https://cdn.sparkfun.com/assets/9/9/0/d/e/raspberry-pi-5-product-brief.pdf},
+  urldate = {2026-11-16},
+}
+
+@misc{px4_voxl2,
+  title        = {{ModalAI VOXL} 2},
+  author       = {{PX4 Autopilot Development Team}},
+  howpublished = {PX4 User Guide (main)},
+  url          = {https://docs.px4.io/main/en/flight_controller/modalai_voxl_2.html},
+  urldate = {2026-11-16},
+}
+
+@article{rey2025yolo,
+  title         = {A Performance Analysis of You Only Look Once Models for Deployment on Constrained Computational Edge Devices in Drone Applications},
+  author        = {Rey, Lucas and Bernardos, Ana M. and Dobrzycki, Andrzej D. and Carrami{\~n}ana, David and Bergesio, Luca and Besada, Juan A. and Casar, Jos{\'e} Ram{\'o}n},
+  journal       = {Electronics},
+  volume        = {14},
+  number        = {3},
+  pages         = {638},
+  year          = {2025},
+  eprint        = {2502.15737},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2502.15737},
+}
+
+@misc{cheng2024yoloworld,
+  title         = {{YOLO-World}: Real-Time Open-Vocabulary Object Detection},
+  author        = {Cheng, Tianheng and Song, Lin and Ge, Yixiao and Liu, Wenyu and Wang, Xinggang and Shan, Ying},
+  year          = {2024},
+  eprint        = {2401.17270},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2401.17270}
+}
+
+@misc{liu2023groundingdino,
+  title         = {Grounding {DINO}: Marrying {DINO} with Grounded Pre-Training for Open-Set Object Detection},
+  author        = {Liu, Shilong and Zeng, Zhaoyang and Ren, Tianhe and Li, Feng and Zhang, Hao and others},
+  year          = {2023},
+  eprint        = {2303.05499},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2303.05499}
+}
+
+@article{park2025openvocabedge,
+  title   = {Real-time Open-Vocabulary Perception for Mobile Robots on Edge Devices: A Systematic Analysis of the Accuracy-Latency Trade-off},
+  author  = {Park, Jongyoon and Kim, Pileun and Ko, Daeil},
+  journal = {Frontiers in Robotics and AI},
+  volume  = {12},
+  pages   = {1693988},
+  year    = {2025},
+  doi     = {10.3389/frobt.2025.1693988},
+  url     = {https://www.frontiersin.org/journals/robotics-and-ai/articles/10.3389/frobt.2025.1693988/full}
+}
+
+@inproceedings{dimmig2023smallform,
+  title         = {A Small Form Factor Aerial Research Vehicle for Pick-and-Place Tasks with Onboard Real-Time Object Detection and Visual Odometry},
+  author        = {Dimmig, Cora A. and Goodridge, Anna and Baraban, Gabriel and Zhu, Pupei and Bhowmick, Joyraj and Kobilarov, Marin},
+  booktitle     = {IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year          = {2023},
+  doi           = {10.1109/IROS55552.2023.10342295},
+  eprint        = {2308.01398},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2308.01398},
+}
+
+@inproceedings{kazemzadeh2014referitgame,
+  title     = {{R}efer{I}t{G}ame: Referring to Objects in Photographs of Natural Scenes},
+  author    = {Kazemzadeh, Sahar and Ordonez, Vicente and Matten, Mark and Berg, Tamara},
+  booktitle = {Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP)},
+  pages     = {787--798},
+  year      = {2014},
+  address   = {Doha, Qatar},
+  publisher = {Association for Computational Linguistics},
+  doi       = {10.3115/v1/D14-1086},
+  url       = {https://aclanthology.org/D14-1086/}
+}
+
+@misc{yu2016refcoco,
+  title         = {Modeling Context in Referring Expressions},
+  author        = {Yu, Licheng and Poirson, Patrick and Yang, Shan and Berg, Alexander C. and Berg, Tamara L.},
+  year          = {2016},
+  eprint        = {1608.00272},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/1608.00272},
+}
+
+@misc{mao2016refcocog,
+  title         = {Generation and Comprehension of Unambiguous Object Descriptions},
+  author        = {Mao, Junhua and Huang, Jonathan and Toshev, Alexander and Camburu, Oana and Yuille, Alan and Murphy, Kevin},
+  year          = {2016},
+  eprint        = {1511.02283},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/1511.02283},
+}
+
+@inproceedings{liu2023gres,
+  title     = {{GRES}: Generalized Referring Expression Segmentation},
+  author    = {Liu, Chang and Ding, Henghui and Jiang, Xudong},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {23592--23601},
+  year      = {2023},
+  url       = {https://openaccess.thecvf.com/content/CVPR2023/html/Liu_GRES_Generalized_Referring_Expression_Segmentation_CVPR_2023_paper.html},
+}
+
+@misc{sun2025refdrone,
+  title         = {{RefDrone}: A Challenging Benchmark for Referring Expression Comprehension in Drone Scenes},
+  author        = {Sun, Zhichao and Liu, Yepeng and Zhu, Huachao and Gu, Yuliang and Zou, Yuda and Liu, Zelong and Xia, Gui-Song and Du, Bo and Xu, Yongchao},
+  year          = {2025},
+  eprint        = {2502.00392},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2502.00392}
+}
+
+@misc{zhu2020visdrone,
+  title         = {Detection and Tracking Meet Drones Challenge},
+  author        = {Zhu, Pengfei and Wen, Longyin and Du, Dawei and Bian, Xiao and Fan, Heng and Hu, Qinghua and Ling, Haibin},
+  year          = {2020},
+  eprint        = {2001.06303},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  doi           = {10.48550/arXiv.2001.06303},
+  url           = {https://arxiv.org/abs/2001.06303},
+}
+
+@misc{lin2014coco,
+  title         = {Microsoft {COCO}: Common Objects in Context},
+  author        = {Lin, Tsung-Yi and Maire, Michael and Belongie, Serge and Bourdev, Lubomir and Girshick, Ross and others},
+  year          = {2014},
+  eprint        = {1405.0312},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/1405.0312}
+}
+
+@misc{bai2025qwen3vl,
+  title         = {{Qwen3-VL} Technical Report},
+  author        = {Bai, Shuai and Cai, Yuxuan and Chen, Ruizhe and Chen, Keqin and Chen, Xionghui and others},
+  year          = {2025},
+  eprint        = {2511.21631},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2511.21631}
+}
+
+@misc{bai2025qwen25vl,
+  title         = {{Qwen2.5-VL} Technical Report},
+  author        = {Bai, Shuai and Chen, Keqin and Liu, Xuejing and Wang, Jialin and Ge, Wenbin and others},
+  year          = {2025},
+  eprint        = {2502.13923},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2502.13923}
+}
+
+@misc{qwen2025qwen3vl4bcard,
+  title        = {{Qwen3-VL-4B-Instruct} Model Card},
+  author       = {{Qwen Team}},
+  year         = {2025},
+  howpublished = {Hugging Face model repository},
+  url          = {https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct},
+  urldate = {2026-11-16},
+}
+
+@misc{amini2025lfm2,
+  title         = {{LFM2} Technical Report},
+  author        = {Amini, Alexander and others},
+  year          = {2025},
+  eprint        = {2511.23404},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2511.23404},
+}
+
+@misc{liquidai2025lfm2vl,
+  title        = {{LFM2-VL}: Efficient Vision-Language Models},
+  author       = {{Liquid AI}},
+  year         = {2025},
+  month        = aug,
+  howpublished = {Liquid AI blog},
+  url          = {https://www.liquid.ai/blog/lfm2-vl-efficient-vision-language-models},
+  urldate = {2026-11-16},
+}
+
+@misc{gemmateam2025gemma3,
+  title         = {Gemma 3 Technical Report},
+  author        = {{Gemma Team} and Kamath, Aishwarya and Ferret, Johan and others},
+  year          = {2025},
+  eprint        = {2503.19786},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2503.19786}
+}
+
+@article{borenstein1991vfh,
+  title   = {The Vector Field Histogram -- Fast Obstacle Avoidance for Mobile Robots},
+  author  = {Borenstein, Johann and Koren, Yoram},
+  journal = {IEEE Transactions on Robotics and Automation},
+  volume  = {7},
+  number  = {3},
+  pages   = {278--288},
+  year    = {1991},
+  url     = {https://www.cs.utexas.edu/~pstone/Courses/393Rfall11/readings/Borenstein-tra-91.pdf},
+}
+
+@inproceedings{vanneste2014vfh3d,
+  title     = {{3DVFH+}: Real-Time Three-Dimensional Obstacle Avoidance Using an Octomap},
+  author    = {Vanneste, Simon and Bellekens, Ben and Weyn, Maarten},
+  booktitle = {CEUR Workshop Proceedings, Vol. 1319},
+  year      = {2014},
+  url       = {https://discuss.px4.io/uploads/default/original/2X/e/e64129217d296873b1f71cbb31f49702ff3994a3.pdf},
+}
+
+@misc{px4_collisionprevention,
+  title        = {Collision Prevention},
+  author       = {{PX4 Autopilot Development Team}},
+  howpublished = {PX4 User Guide (main)},
+  url          = {https://docs.px4.io/main/en/computer_vision/collision_prevention.html},
+  urldate = {2026-11-16},
+}
+
+@misc{px4_avoidance,
+  title        = {{PX4-Avoidance}: Obstacle Detection and Avoidance Planners for {PX4}},
+  author       = {{PX4}},
+  howpublished = {GitHub repository (archived 2024-08-01)},
+  url          = {https://github.com/PX4/PX4-Avoidance},
+  urldate = {2026-11-16},
+}
+
+@misc{saviolo2024reactive,
+  title         = {Reactive Collision Avoidance for Safe Agile Navigation},
+  author        = {Saviolo, Alessandro and Picello, Niko and Mao, Jeffrey and Verma, Rishabh and Loianno, Giuseppe},
+  year          = {2024},
+  eprint        = {2409.11962},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2409.11962}
+}
+
+@misc{bes2024dwa3d,
+  title         = {{DWA-3D}: A Reactive Planner for Robust and Efficient Autonomous {UAV} Navigation in Confined Environments},
+  author        = {Bes, Jorge and Dendarieta, Juan and Riazuelo, Luis and Montano, Luis},
+  year          = {2024},
+  eprint        = {2409.05421},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2409.05421}
+}
+
+@misc{zhou2020egoplanner,
+  title         = {{EGO-Planner}: An {ESDF}-free Gradient-based Local Planner for Quadrotors},
+  author        = {Zhou, Xin and Wang, Zhepei and Ye, Hongkai and Xu, Chao and Gao, Fei},
+  year          = {2020},
+  eprint        = {2008.08835},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2008.08835}
+}
+
+@article{lee1976tau,
+  title   = {A Theory of Visual Control of Braking Based on Information about Time-to-Collision},
+  author  = {Lee, David N.},
+  journal = {Perception},
+  volume  = {5},
+  year    = {1976},
+  doi     = {10.1068/p050437},
+  url     = {https://doi.org/10.1068/p050437},
+}
+
+@misc{intel_d435i,
+  title        = {Depth Camera {D435i}},
+  author       = {{RealSense}},
+  howpublished = {Product page},
+  url          = {https://realsenseai.com/products/depth-camera-d435i/},
+  urldate = {2026-11-16},
+}
+
+@misc{korovko2025cuvslam,
+  title         = {{cuVSLAM}: {CUDA} Accelerated Visual Odometry and Mapping},
+  author        = {Korovko, Alexander and Slepichev, Dmitry and Efitorov, Alexander and Dzhumamuratova, Aigul and Kuznetsov, Viktor and Rabeti, Hesam and Biswas, Joydeep and Pouya, Soha},
+  year          = {2025},
+  eprint        = {2506.04359},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2506.04359}
+}
+
+@misc{nvidia_isaacrosvslam,
+  title        = {Isaac {ROS} Visual {SLAM}},
+  author       = {{NVIDIA}},
+  howpublished = {Isaac ROS documentation (latest, updated 2026-09-21)},
+  url          = {https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_visual_slam/index.html},
+  urldate = {2026-11-16},
+}
+
+@misc{px4_extpos,
+  title        = {Using Vision or Motion Capture Systems for Position Estimation},
+  author       = {{PX4 Autopilot Development Team}},
+  howpublished = {PX4 User Guide (main)},
+  url          = {https://docs.px4.io/main/en/ros/external_position_estimation},
+  urldate = {2026-11-16},
+}
+
+@misc{px4_vio,
+  title        = {Visual Inertial Odometry ({VIO})},
+  author       = {{PX4 Autopilot Development Team}},
+  howpublished = {PX4 User Guide (main)},
+  url          = {https://docs.px4.io/main/en/computer_vision/visual_inertial_odometry},
+  urldate = {2026-11-16},
+}
+
+@inproceedings{geneva2020openvins,
+  title     = {{OpenVINS}: A Research Platform for Visual-Inertial Estimation},
+  author    = {Geneva, Patrick and Eckenhoff, Kevin and Lee, Woosik and Yang, Yulin and Huang, Guoquan},
+  booktitle = {Proc. of the IEEE International Conference on Robotics and Automation (ICRA)},
+  year      = {2020},
+  url       = {https://udel.edu/~pgeneva/downloads/papers/c10.pdf},
+}
+
+@article{qin2018vinsmono,
+  title         = {{VINS-Mono}: A Robust and Versatile Monocular Visual-Inertial State Estimator},
+  author        = {Qin, Tong and Li, Peiliang and Shen, Shaojie},
+  journal       = {IEEE Transactions on Robotics},
+  year          = {2018},
+  doi           = {10.1109/TRO.2018.2853729},
+  eprint        = {1708.03852},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/1708.03852},
+}
+
+@misc{jeon2021vio,
+  title         = {Run Your Visual-Inertial Odometry on {NVIDIA Jetson}: Benchmark Tests on a Micro Aerial Vehicle},
+  author        = {Jeon, Jinwoo and Jung, Sungwook and Lee, Eungchang and Choi, Duckyu and Myung, Hyun},
+  year          = {2021},
+  eprint        = {2103.01655},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2103.01655}
+}
+
+@inproceedings{meier2015px4,
+  title     = {{PX4}: A Node-Based Multithreaded Open Source Robotics Framework for Deeply Embedded Platforms},
+  author    = {Meier, Lorenz and Honegger, Dominik and Pollefeys, Marc},
+  booktitle = {2015 IEEE International Conference on Robotics and Automation (ICRA)},
+  pages     = {6235--6240},
+  year      = {2015},
+  doi       = {10.1109/ICRA.2015.7140074},
+  url       = {https://ieeexplore.ieee.org/document/7140074},
+}
+
+@misc{px4_gazebo,
+  title        = {Gazebo Simulation},
+  author       = {{PX4 Autopilot Development Team}},
+  howpublished = {PX4 User Guide (v1.17)},
+  url          = {https://docs.px4.io/v1.17/en/sim_gazebo_gz/},
+  urldate = {2026-11-16},
+}
+
+@misc{px4_offboard,
+  title        = {Offboard Mode (Generic/All Frames)},
+  author       = {{PX4 Autopilot Development Team}},
+  howpublished = {PX4 User Guide (v1.16)},
+  url          = {https://docs.px4.io/v1.16/en/flight_modes/offboard},
+  urldate = {2026-11-16},
+}
+
+@misc{mavsdk_offboard,
+  title        = {Offboard Control},
+  author       = {{MAVSDK / Dronecode}},
+  howpublished = {MAVSDK Guide (v3, C++)},
+  url          = {https://mavsdk.mavlink.io/v3/en/cpp/guide/offboard.html},
+  urldate = {2026-11-16},
+}
+
+@misc{koubaa2019mavlink,
+  title         = {Micro Air Vehicle Link ({MAVLink}) in a Nutshell: A Survey},
+  author        = {Koubaa, Anis and Allouch, Azza and Alajlan, Maram and Javed, Yasir and Belghith, Abdelfettah and Khalgui, Mohamed},
+  year          = {2019},
+  eprint        = {1906.10641},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/1906.10641}
+}
+
+@misc{px4_x500v2,
+  title        = {Holybro {X500 V2} + {Pixhawk 6C} ({PX4} Development Kit)},
+  author       = {{PX4 Autopilot Development Team}},
+  howpublished = {PX4 User Guide (main)},
+  url          = {https://docs.px4.io/main/en/frames_multicopter/holybro_x500v2_pixhawk6c},
+  urldate = {2026-11-16},
 }

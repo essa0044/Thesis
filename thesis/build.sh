@@ -5,7 +5,7 @@
 # Figures: python3 figures/make_figures.py (data) and figures/src/*.mmd (mermaid-cli).
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
-cat references_core.bib ../docs/related_work/references.bib > references.bib 2>/dev/null || cp references_core.bib references.bib
+python3 make_bib.py
 pandoc metadata.yaml chapters/0*.md \
   --from markdown+pipe_tables+table_captions+implicit_figures \
   --lua-filter crossref.lua \
@@ -13,5 +13,5 @@ pandoc metadata.yaml chapters/0*.md \
   --reference-doc reference.docx --resource-path .:figures \
   --toc --toc-depth 2 --number-sections \
   -o Thesis.docx
-zip -d Thesis.docx '*/' >/dev/null 2>&1 || true
+python3 fix_docx.py Thesis.docx
 echo "wrote $(pwd)/Thesis.docx"

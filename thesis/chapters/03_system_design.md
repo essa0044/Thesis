@@ -63,14 +63,14 @@ Requests use temperature 0 and at most 128 output tokens; "thinking" modes are s
 
 **Edge rule.** A box that touches the left or right image edge is not turned into a goal: the object is cut off, the box centre is not the object's centre, and the depth inside the box may belong to something in front of it (Chapter 5 shows such a case). The search treats it as a hint to turn instead.
 
-**Consensus.** A goal is accepted only when two of the last three answers give goals within 1.5 m of each other; "not found" answers count as votes. A single invented detection — which the best small model produces for about half of the absent targets (Chapter 4) — therefore cannot move the drone. Once accepted, the goal is a fixed point in the room; later answers can replace it only by agreeing on a new point.
+**Consensus.** A goal is accepted only when two of the last three answers give goals within 1.5 m of each other; "not found" answers count as votes. A single invented detection — which the best small model produces for about half of the absent targets (Chapter 4) — therefore cannot move the drone. VLN on the Fly [@tayar2026vln] uses a similar rule with three consecutive agreeing predictions. Once accepted, the goal is a fixed point in the room; later answers can replace it only by agreeing on a new point.
 
 ## Search {#sec:search}
 
 While no goal is accepted, the drone searches by **turn, stop and look**: it turns to a heading, holds still until the VLM has answered for a picture taken after the turn ended, and moves on only if that answer finds nothing. Holding still matters because one answer takes seconds: a drone that keeps turning has looked elsewhere by the time the answer arrives, and two answers never agree. During the search the drone also holds its mission altitude actively.
 
 - **Sweep (baseline).** A fixed list of headings around the start heading: 0°, +30°, −30°, +60°, −60° … 180°.
-- **Active search.** A belief over 36 directions (10° each, uniform at the start) is updated by every answer. "Not found" multiplies the directions inside the camera's 69° view by 0.3 — not zero, because the VLM sometimes misses targets. "Found" moves 80 % of the belief to the direction of the box and turns the drone to centre the box, so the confirming answer comes from a different picture. The next view, when nothing is found, is the heading whose view holds the most belief, minus 0.15 per 180° of turning; the view just seen is skipped. This is a simple form of active perception [@bajcsy1988; @aloimonos1988]: the sensor is moved to where the next answer is expected to be most informative.
+- **Active search.** A belief over 36 directions (10° each, uniform at the start) is updated by every answer. "Not found" multiplies the directions inside the camera's 69° view by 0.3 — not zero, because the VLM sometimes misses targets. "Found" moves 80 % of the belief to the direction of the box and turns the drone to centre the box, so the confirming answer comes from a different picture. The next view, when nothing is found, is the heading whose view holds the most belief, minus 0.15 per 180° of turning; the view just seen is skipped. This is a simple form of active perception [@bajcsy1988active; @aloimonos1988active]: the sensor is moved to where the next answer is expected to be most informative.
 
 ## Safety layer: depth guard and go-around {#sec:safety}
 
@@ -84,7 +84,7 @@ The safety layer uses only the depth image and runs in every control step.
 
 ## Control and the PX4 interface
 
-The mission code talks to PX4 [@px4] through MAVSDK [@mavsdk] (MAVLink). It arms the drone, takes off to 2 m, switches to OFFBOARD mode and then sends a body-frame velocity setpoint (forward, right, down, yaw rate) every 50 ms. The steering law turns the drone to face the goal (at most 30°/s), flies forward at a speed proportional to the remaining distance (at most 1 m/s) once the heading error is below 30°, holds the altitude with a proportional term, and declares arrival within 0.5 m of the goal; after 3 s of hovering at the goal the drone lands. PX4 keeps its own failsafes: if the setpoints stop, it leaves OFFBOARD mode, and the safety pilot can take over at any time. The telemetry streams the code uses (position, velocity, attitude) are requested at 25 Hz.
+The mission code talks to PX4 [@meier2015px4] through MAVSDK [@mavsdk] (MAVLink). It arms the drone, takes off to 2 m, switches to OFFBOARD mode and then sends a body-frame velocity setpoint (forward, right, down, yaw rate) every 50 ms. The steering law turns the drone to face the goal (at most 30°/s), flies forward at a speed proportional to the remaining distance (at most 1 m/s) once the heading error is below 30°, holds the altitude with a proportional term, and declares arrival within 0.5 m of the goal; after 3 s of hovering at the goal the drone lands. PX4 keeps its own failsafes: if the setpoints stop, it leaves OFFBOARD mode, and the safety pilot can take over at any time. The telemetry streams the code uses (position, velocity, attitude) are requested at 25 Hz.
 
 ## Data flow
 

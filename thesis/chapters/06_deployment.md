@@ -36,16 +36,16 @@ Figure @fig:wiring shows how the parts are connected.
 The same Python code as in simulation runs on the Jetson; only the camera source changes (the RealSense SDK instead of Gazebo's transport). The software stack is:
 
 - JetPack (Ubuntu with CUDA), headless, on the NVMe SSD;
-- the VLM server: Ollama or llama.cpp [@llamacpp] with CUDA, Qwen3-VL-4B-Instruct q4_K_M (3.3 GB), kept loaded;
+- the VLM server: Ollama or llama.cpp [@ggml_llamacpp] with CUDA, Qwen3-VL-4B-Instruct q4_K_M (3.3 GB), kept loaded;
 - the RealSense SDK (librealsense) for RGB, depth, infrared and IMU streams with hardware time stamps;
 - visual-inertial odometry (below);
 - the mission program: VLM worker, control loop at 20 Hz, logs.
 
-**Memory budget.** The 8 GB are shared between CPU and GPU. The model file is 3.3 GB; with the vision encoder's work memory and a 2,048-token context, the VLM is expected to need 4–5 GB. The operating system, the visual odometry and the mission program have to fit in the rest. This is tight, and it is measured first (stage 1). If it does not fit, the fallbacks are LFM3-VL 2B (1.1 GB, Chapter 4) or the 2B Qwen3-VL at 8 bit (2.7 GB).
+**Memory budget.** The 8 GB are shared between CPU and GPU. The model file is 3.3 GB; with the vision encoder's work memory and a 2,048-token context, the VLM is expected to need 4–5 GB. The operating system, the visual odometry and the mission program have to fit in the rest. This is tight: NVIDIA's own TensorRT benchmarks list Qwen3-VL-2B, but not the 4B, for the Orin Nano [@nvidia2026trtedgellm], and community guides give about 4 B at 4 bit as the board's limit [@adsahu2026orinnanoguide]. It is therefore measured first (stage 1). If it does not fit, the fallbacks are LFM3-VL 2B (1.1 GB, Chapter 4) or the 2B Qwen3-VL at 8 bit (2.7 GB).
 
 ## Indoor positioning by visual-inertial odometry {#sec:vio}
 
-The control loop commands velocities, and PX4 needs a position estimate to hold them; indoors there is no GPS, and the Pixhawk's IMUs alone drift within seconds. VLN on the Fly [@tayar2026vln], with the same flight controller and camera and a larger Jetson Orin NX, used an OptiTrack motion-capture system fused by EKF2. The lab has none, and nothing is to be bought, so the drone estimates its own motion from its camera: **visual-inertial odometry (VIO)** from the D435i's two infrared images and its IMU, running on the Jetson. The first choice is NVIDIA's Isaac ROS Visual SLAM (cuVSLAM), which supports the RealSense on Jetson; OpenVINS [@openvins] is the alternative. The VIO pose and velocity are sent to PX4 as MAVLink odometry messages, and PX4's estimator (EKF2) fuses them as external vision, with GPS and compass switched off, as described in PX4's visual-inertial-odometry guide [@px4vio].
+The control loop commands velocities, and PX4 needs a position estimate to hold them; indoors there is no GPS, and the Pixhawk's IMUs alone drift within seconds. VLN on the Fly [@tayar2026vln], with the same flight controller and camera and a larger Jetson Orin NX, used an OptiTrack motion-capture system fused by EKF2. The lab has none, and nothing is to be bought, so the drone estimates its own motion from its camera: **visual-inertial odometry (VIO)** from the D435i's two infrared images and its IMU, running on the Jetson. The first choice is NVIDIA's Isaac ROS Visual SLAM (cuVSLAM), which supports the RealSense on Jetson; OpenVINS [@geneva2020openvins] is the alternative. The VIO pose and velocity are sent to PX4 as MAVLink odometry messages, and PX4's estimator (EKF2) fuses them as external vision, with GPS and compass switched off, as described in PX4's visual-inertial-odometry guide [@px4_vio].
 
 This choice has four consequences for the thesis:
 

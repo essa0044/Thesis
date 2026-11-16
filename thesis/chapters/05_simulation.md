@@ -4,7 +4,7 @@ Before any hardware was available, the complete stack was flown in PX4 software-
 
 ## Set-up
 
-**Software.** PX4 v1.17.0 [@px4] in software-in-the-loop mode with Gazebo Harmonic (gz-sim 8.15.0) [@gazebo], the stock X500 quadrotor with a depth camera (`gz_x500_depth`: an RGB camera of 1920 × 1080 pixels with a 69° horizontal field of view, and a depth camera of 640 × 480 pixels with a 73° field of view). The mission code of Chapter @sec:design connects through MAVSDK-Python [@mavsdk] and reads the camera images directly from Gazebo's transport layer. The VLM is Qwen3-VL-4B-Instruct (q4_K_M) in Ollama 0.40.16.
+**Software.** PX4 v1.17.0 [@meier2015px4] in software-in-the-loop mode with Gazebo Harmonic (gz-sim 8.15.0) [@gazebo], the stock X500 quadrotor with a depth camera (`gz_x500_depth`: an RGB camera of 1920 × 1080 pixels with a 69° horizontal field of view, and a depth camera of 640 × 480 pixels with a 73° field of view). The mission code of Chapter @sec:design connects through MAVSDK-Python [@mavsdk] and reads the camera images directly from Gazebo's transport layer. The VLM is Qwen3-VL-4B-Instruct (q4_K_M) in Ollama 0.40.16.
 
 **Machine.** A Windows 11 laptop (Intel Core i5-12500H, NVIDIA RTX 3050 Laptop GPU with 4 GB) runs PX4, Gazebo and the mission code in WSL2 (Ubuntu 24.04) and Ollama on Windows. Gazebo renders its cameras on the NVIDIA GPU through WSL's Direct3D 12 route, without a window. The 4 GB GPU cannot hold Gazebo's rendering and the model at the same time, so the VLM runs entirely on the CPU and takes about **50 s per answer** — two orders of magnitude slower than on a desktop GPU and probably one order slower than on the Jetson. The simulation therefore tests the logic under an extreme VLM delay, not the timing of the real system.
 
@@ -38,12 +38,12 @@ Table: Results of the final series (5 runs per row). Time to goal and stand-off 
 
 | World | Target | Search | Success | VLM answers (median) | Time to goal (s) | Stand-off (m) | Min. propeller clearance (m) |
 |---|---|---|---|---|---|---|---|
-| no obstacles | red box | sweep | 5/5 | 2 | 117 | 1.88 | – |
-| no obstacles | red box | active | 5/5 | 2 | 123 | 1.91 | – |
-| no obstacles | green box | sweep | 5/5 | 4 | 206 | 2.04 | – |
-| no obstacles | green box | active | 5/5 | 4 | 220 | 2.05 | – |
-| no obstacles | blue barrel | sweep | 5/5 | 5 | 263 | 1.89 | – |
-| no obstacles | blue barrel | active | 5/5 | 4 | 218 | 1.91 | – |
+| empty | red box | sweep | 5/5 | 2 | 117 | 1.88 | – |
+| empty | red box | active | 5/5 | 2 | 123 | 1.91 | – |
+| empty | green box | sweep | 5/5 | 4 | 206 | 2.04 | – |
+| empty | green box | active | 5/5 | 4 | 220 | 2.05 | – |
+| empty | blue barrel | sweep | 5/5 | 5 | 263 | 1.89 | – |
+| empty | blue barrel | active | 5/5 | 4 | 218 | 1.91 | – |
 | poles | red box | sweep | 5/5 | 2 | 113 | 1.92 | 0.23 |
 | poles | red box | active | 4/5 | 2 | 113 | 1.96 | 0.48 |
 | poles | green box | sweep | 4/5 | 4 | 219 | 2.04 | 0.04 |
@@ -80,6 +80,7 @@ The three failures and the two close passes all come from two limits of the desi
 ## Threats to validity
 
 - **Perfect depth.** Gazebo's depth image has no noise, no holes and no reflections. The real RealSense will be worse, especially on thin poles, dark or shiny surfaces and at short range; this is measured in stages 3 and 8 of the deployment plan.
+- **Camera geometry.** The simulated depth camera sees 73° horizontally; the real D435i sees about 87° and works best between about 0.3 and 3 m [@intel_d435i]. The guard's corridors and the go-around angles were chosen to stay inside the narrower simulated view.
 - **VLM latency.** About 50 s per answer is unrealistically slow. It makes searches long and favours the search that needs fewer answers; it does not affect the guard, which runs at 20 Hz independently of the VLM.
 - **Simple scenes.** Four objects with distinct colours on a flat plane, one pole per path. The VLM had an easy task; real lab images with clutter and similar objects will be harder (Chapter 4 suggests about 70 % found per answer on drone images).
 - **Sample size.** Five runs per case can show large differences only; the success rates of the two searches cannot be told apart, and the effect on VLM answers is significant only for the barrel.

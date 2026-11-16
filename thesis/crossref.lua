@@ -63,6 +63,34 @@ function Pandoc(doc)
       if id then labels[id] = num end
       prefix(blk.caption.long, "Figure", num)
     elseif blk.t == "Table" then
+      -- full text width; column widths from the longest cell text (square root, so long
+      -- columns get more room without squeezing short ones)
+      local n = #blk.colspecs
+      local maxlen, maxword = {}, {}
+      for i = 1, n do maxlen[i] = 4; maxword[i] = 4 end
+      local function scan(rows)
+        for _, row in ipairs(rows) do
+          for i, cell in ipairs(row.cells) do
+            if i <= n then
+              local txt = pandoc.utils.stringify(cell.contents)
+              local len = utf8.len(txt) or 4
+              if len > maxlen[i] then maxlen[i] = len end
+              for w in txt:gmatch("%S+") do
+                local wl = utf8.len(w) or #w
+                if wl > maxword[i] then maxword[i] = wl end
+              end
+            end
+          end
+        end
+      end
+      scan(blk.head.rows)
+      for _, body in ipairs(blk.bodies) do scan(body.body) end
+      local total, w = 0, {}
+      for i = 1, n do
+        w[i] = math.max((math.min(maxword[i], 14) + 3) * 1.6, 4 * math.sqrt(math.min(maxlen[i], 120)))
+        total = total + w[i]
+      end
+      for i = 1, n do blk.colspecs[i] = { blk.colspecs[i][1], w[i] / total } end
       ntbl = ntbl + 1
       local num = chapter .. "." .. ntbl
       local id = strip_table_id(blk.caption.long)
