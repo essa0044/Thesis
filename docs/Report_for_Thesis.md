@@ -897,6 +897,46 @@ Active search, the 8 runs before the restart (valid):
 
 **Next:** get Gazebo rendering on the GPU again (d3d12), confirm with one obstacle run (going around about 8 s, no frozen or late depth), then fly the active search again in full (30 runs) for the comparison with the sweep.
 
+### 15.8 Final simulation series: sweep vs active search (15 Nov, 60 runs)
+
+**Set-up.** Commit 86b7a12 (all fixes of 15.6–15.7), laptop (RTX 3050 4 GB, WSL2 Ubuntu 24.04), PX4 v1.17.0, Gazebo 8.15.0 rendering on the NVIDIA GPU through d3d12, RGB camera at 2 Hz, depth camera at 30 Hz, Qwen3-VL-4B-Instruct q4 in Ollama 0.40.16 entirely on the CPU (about 50 s per answer), 360 s limit. 3 targets × 2 worlds × 5 runs for each search: sweep 18:17–20:35, active 20:35–22:36. Logs, VLM frames and PX4 output: `neurodrone/results/series/20261115_1817_sweep` and `20261115_2035_active`; combined table `final_20261115.md/.csv/.json`.
+
+**Health of the simulation (all 60 runs):** no frozen depth; 99th percentile of the depth age ≤ 0.63 s (sweep) and ≤ 0.23 s (active); altitude while searching 1.4–2.2 m (one short spike to 3.4 m in the sweep); no PX4 failsafe (6 single sensor-timeout lines in all); one simulator start-up error, retried automatically.
+
+| world | target | search | runs | success | arrived | right target | time to goal (s, median) | stand-off (m, median) | min prop clearance (m) | going around (s, median) | VLM latency (s, median) | VLM calls (median) | sim errors (not counted) | frozen-depth steps |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| nd_obstacles | the blue barrel | active | 5 | 5/5 | 5/5 | 5/5 | 160.2 | 2.0 | 0.55 | 3.8 | 49.2 | 3 | 0 | 0 |
+| nd_obstacles | the blue barrel | sweep | 5 | 4/5 | 4/5 | 5/5 | 241.4 | 1.98 | 0.4 | 3.0 | 51.53 | 6 | 0 | 0 |
+| nd_obstacles | the green box | active | 5 | 5/5 | 5/5 | 5/5 | 222.6 | 2.05 | 0.59 | 3.6 | 52.24 | 4 | 0 | 0 |
+| nd_obstacles | the green box | sweep | 5 | 4/5 | 5/5 | 5/5 | 219.4 | 2.04 | 0.04 | 3.7 | 50.47 | 4 | 0 | 0 |
+| nd_obstacles | the red box | active | 5 | 4/5 | 5/5 | 4/5 | 113.0 | 1.96 | 0.48 | 3.8 | 50.49 | 2 | 0 | 0 |
+| nd_obstacles | the red box | sweep | 5 | 5/5 | 5/5 | 5/5 | 113.2 | 1.92 | 0.23 | 3.6 | 51.53 | 2 | 0 | 0 |
+| nd_test | the blue barrel | active | 5 | 5/5 | 5/5 | 5/5 | 217.8 | 1.91 | – | 0.0 | 52.81 | 4 | 0 | 0 |
+| nd_test | the blue barrel | sweep | 5 | 5/5 | 5/5 | 5/5 | 262.7 | 1.89 | – | 0.0 | 49.96 | 5 | 0 | 0 |
+| nd_test | the green box | active | 5 | 5/5 | 5/5 | 5/5 | 220.0 | 2.05 | – | 0.0 | 51.95 | 4 | 0 | 0 |
+| nd_test | the green box | sweep | 5 | 5/5 | 5/5 | 5/5 | 205.9 | 2.04 | – | 0.0 | 50.28 | 4 | 0 | 0 |
+| nd_test | the red box | active | 5 | 5/5 | 5/5 | 5/5 | 122.7 | 1.91 | – | 0.0 | 55.23 | 2 | 0 | 0 |
+| nd_test | the red box | sweep | 5 | 5/5 | 5/5 | 5/5 | 117.0 | 1.88 | – | 0.0 | 54.26 | 2 | 0 | 0 |
+
+**Success:** sweep 28 of 30, active search 29 of 30 (Fisher's exact test p = 1.0: no difference in success at this sample size). Stand-off from the target's surface: median 1.98 m (sweep) and 1.99 m (active); aim 1.5 m from the drone's centre plus braking.
+
+**Search effort (successful runs):**
+
+| Target | Where it is at the start | VLM answers, sweep | VLM answers, active | Time to goal (s), sweep / active |
+|---|---|---|---|---|
+| Red box | in the middle of the picture | 2 (all runs) | 2 (all runs) | 115 / 115 (mean) |
+| Green box | cut off at the right edge | 4 (all runs) | 4 (all runs) | 213 / 223 (mean; Mann-Whitney p = 0.03) |
+| Blue barrel | cut off at the left edge | 4.7 (mean; 5, 5, 5, 5, 5 / 6, 6, 3, 2) | 3.7 (mean; 4, 4, 5, 4, 4 / 3, 3, 4, 3, 3) | 248 / 202 (mean; p = 0.11) |
+
+(VLM answers: Mann-Whitney p = 0.04 for the barrel.) **The active search needed one VLM answer less for the barrel and was the same for the other two.** The reason is the sweep's fixed order: it looks right (+30°) before left (−30°). That is the right side for the green box, so the sweep is already optimal there, and the active search's extra turn to centre the box makes it about 10 s slower; for the barrel on the left, the sweep wastes a view on the wrong side, while the active search turns towards the cut-off barrel at once. With a VLM at about 50 s per answer, one answer is about 50 s; on the Jetson (expected a few seconds per answer) the saving in time will be small, the saving in answers stays. A world with targets behind or far to the side of the drone would show the difference more clearly (not run).
+
+**Failures and near misses (all explained):**
+- **Occlusion: goal in front of the pole (2 runs: sweep green box 5, active red box 4).** The pole stood in front of the target inside the VLM's box; the median depth in the box was the pole's, so the goal was 1.5 m before the pole and the drone "arrived" 5.8 m / 7.3 m short. The edge rule (15.6) does not cover an occluder in the middle of the box. Possible fix (not made): use the farther depth cluster in the box, or check that the depth is consistent with the box size.
+- **No free way around (1 run: sweep blue barrel 3).** At the pole none of the directions within ±30° was free for 2.5 m; the drone stayed stopped for 35 s until the time limit. A limitation of the reactive go-around (only what the camera sees, no map).
+- **Close passes during the go-around (sweep green box 2: 0.04 m propeller clearance; sweep red box 5: 0.23 m).** After the side-step the drone turned back towards the goal once the pole had left the camera's view and cut the corner beside the pole, which it no longer saw. Closest propeller clearance over all obstacle runs: sweep median 0.53 m, minimum 0.04 m; active median 0.59 m, minimum 0.48 m. The difference between the searches here is chance (it depends on the path after the go-around, not on the search). The fix would be memory of the obstacle (keep the side-step until the obstacle is behind the drone by its own position estimate) or a wider corridor.
+
+**Conclusions from the simulation.** The stack (VLM box → depth → goal; consensus; depth guard with reactive go-around) reached the right target in 57 of 60 runs with no collision. The active search used fewer VLM answers when the target was off to the side where the sweep looks second, and the same number otherwise; overall success was the same. The three failures and the close passes come from two known limits of the design: depth in a box can belong to an occluder, and the go-around has no memory. All runs used perfect simulated depth on purpose: how these results change with the real RealSense is the sim-to-real question (18.1, stages 3 and 8).
+
 ## 16. Problems met and how they were fixed
 
 Every problem that changed a method or a number, newest first. These belong in the thesis's methods and limitations sections.
