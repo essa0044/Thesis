@@ -81,7 +81,7 @@ Active perception means moving the sensor to gain information [@bajcsy1988active
 
 ## Indoor state estimation {#sec:rw-state}
 
-PX4 fuses external position and velocity estimates (`ODOMETRY` messages) in its EKF2 estimator, at 30–50 Hz with a tuned delay [@px4_extpos; @px4_vio]. Visual-inertial odometry on Jetson computers is available as NVIDIA's CUDA-accelerated cuVSLAM [@korovko2025cuvslam], packaged as Isaac ROS Visual SLAM [@nvidia_isaacrosvslam], and as the open-source OpenVINS [@geneva2020openvins] and VINS-Mono [@qin2018vinsmono]; Jeon et al. [@jeon2021vio] compared such methods on Jetson boards for drones. The closest VLM drone work localised with motion capture [@tayar2026vln] or LiDAR [@zheng2026onfly]; Taking Flight used a ZED Mini's VIO but ran its models off board [@lim2025takingflight].
+PX4 fuses external position and velocity estimates (`ODOMETRY` messages) in its EKF2 estimator, at 30–50 Hz with a tuned delay [@px4_extpos; @px4_vio]. Visual-inertial odometry on Jetson computers is available as NVIDIA's CUDA-accelerated cuVSLAM [@korovko2025cuvslam], packaged as Isaac ROS Visual SLAM [@nvidia_isaacrosvslam], and as the open-source OpenVINS [@geneva2020openvins] and VINS-Mono [@qin2018vinsmono]; Jeon et al. [@jeon2021vio] compared such methods on Jetson boards for drones. The closest VLM drone work localised with motion capture [@tayar2026vln] or LiDAR [@zheng2026onfly]; Taking Flight used a ZED Mini's VIO but ran its models off board [@lim2025takingflight]. Without any VLM, Bernas [@bernas2025gpsdenied] documented GPS-free PX4 flight with the same Jetson Orin Nano and D435i using Isaac ROS Visual SLAM, which gives this thesis a tested recipe for its VIO (Chapter 6).
 
 ## Simulation and flight-controller interface {#sec:rw-sim}
 
