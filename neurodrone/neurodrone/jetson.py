@@ -117,6 +117,13 @@ class TegraLogger:
         self._thread.start()
         return self
 
+    def wait_first(self, timeout_s: float = 3.0) -> bool:
+        """Wait until the first line has been parsed (so a short phase is not measured before the log runs)."""
+        t0 = time.monotonic()
+        while self.available and not self.records and time.monotonic() - t0 < timeout_s:
+            time.sleep(0.02)
+        return bool(self.records)
+
     def mark(self, label: str) -> None:
         """Mark a phase (e.g. 'soak start') so the summary can split the record."""
         self._marks.append((time.time(), label))

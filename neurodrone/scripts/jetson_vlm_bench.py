@@ -44,7 +44,7 @@ REFERENCE = {
 
 
 # ----------------------------------------------------------------------------- pictures
-def synthetic_picture(k: int) -> np.ndarray:
+def synthetic_picture(k) -> np.ndarray:
     """1920 x 1080 test picture, different for every k: a red box and a blue barrel on a floor, plus noise."""
     rng = np.random.default_rng(k)
     img = np.full((1080, 1920, 3), 200, np.uint8)
@@ -60,7 +60,11 @@ class Pictures:
     """New picture every call: synthetic, or real photos from a folder (each reuse gets fresh noise, so Ollama
     cannot reuse its work on it)."""
 
+    _instances = 0
+
     def __init__(self, folder=None, seed=0):
+        Pictures._instances += 1
+        self.base = (int(time.time() * 1000), Pictures._instances)  # every Pictures object draws its own pictures
         self.files = []
         if folder:
             self.files = sorted(os.path.join(folder, f) for f in os.listdir(folder)
@@ -72,7 +76,7 @@ class Pictures:
     def next(self) -> np.ndarray:
         self.k += 1
         if not self.files:
-            return synthetic_picture(int(time.time() * 1000) % 1_000_000 + self.k)
+            return synthetic_picture((*self.base, self.k))
         from PIL import Image
         img = np.asarray(Image.open(self.files[self.k % len(self.files)]).convert("RGB"))
         if self.k >= len(self.files):
@@ -149,6 +153,7 @@ def calls_summary(rows):
 def run_calls(a, name, n_calls=None, minutes=None):
     pics = Pictures(a.images)
     tl = J.TegraLogger(path=os.path.join(a.out, f"tegrastats_{name}.jsonl")).start()
+    tl.wait_first()
     rows, t_start, k = [], time.time(), 0
     with open(os.path.join(a.out, f"{name}_calls.jsonl"), "w") as f:
         while True:
