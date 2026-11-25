@@ -3,6 +3,7 @@
 does it stay good while the VLM runs on the same Jetson (thesis Chapter 6)?
 
     # VIO running (jetson/README.md, stage 6), the Pixhawk on USB, propellers OFF for `drift`
+    python scripts/vio_check.py gps --duration 300 --out ~/nd_results/stage6/gps_indoor   # GPS only, drone standing still
     python scripts/vio_check.py drift --laps 3 --out ~/nd_results/stage6/drift
     python scripts/vio_check.py log --duration 120 --out ~/nd_results/stage6/hold            # hover / hold, pilot flies
     python scripts/vio_check.py log --duration 300 --vlm-load --ros-hz-container isaac_ros_dev-aarch64-container \
@@ -11,6 +12,11 @@ does it stay good while the VLM runs on the same Jetson (thesis Chapter 6)?
 drift  Put the drone on a floor mark and press Enter; carry it around the room (a few metres, turns included) and
        back onto the same mark; press Enter again. The difference of PX4's position estimate between the two (2 s
        averages) is the drift of that lap. There is no motion capture: the floor mark is the ground truth.
+gps    Why not GPS indoors, measured: the drone stands STILL on a table in the lab, PX4 on its default (GPS)
+       parameters, for --duration s (default 300). Logs the GPS receiver's own position, satellites, fix type and
+       HDOP, and PX4's position estimate. Since nothing moves, every centimetre the position wanders is error.
+       Run it BEFORE `px4_params.py apply --profile vio` (that switches GPS off). Do it once near a window and once
+       in the middle of the room.
 log    Records PX4's position and attitude at 20 Hz for --duration s while the pilot hovers or holds position:
        spread of the position (how still it holds), how often the estimate updates, gaps, and PX4's
        "local position ok" flag. --vlm-load: meanwhile the VLM answers non-stop on new pictures (the stage-6 pass
@@ -68,6 +74,44 @@ def log_summary(recs):
                 local_position_ok_share=(sum(ok) / len(ok)) if ok else None)
 
 
+def gps_summary(recs):
+    """Drone standing still: how far the GPS receiver's position and PX4's estimate wander (metres around their
+    mean), largest jump between two consecutive fixes, satellites, fix type, HDOP."""
+    out = dict(n=len(recs))
+    g = [r for r in recs if r.get("lat") is not None and r.get("lon") is not None and r.get("fix") not in ("NO_GPS", "NO_FIX")]
+    out["fix_share"] = len(g) / len(recs) if recs else None
+    fixes = [r.get("fix") for r in recs if r.get("fix")]
+    out["fix_types"] = {k: fixes.count(k) / len(fixes) for k in sorted(set(fixes))} if fixes else {}
+    sats = [r["sats"] for r in recs if r.get("sats") is not None]
+    if sats:
+        out.update(sats_median=float(np.median(sats)), sats_min=int(min(sats)), sats_max=int(max(sats)))
+    hd = [r["hdop"] for r in recs if r.get("hdop") is not None and math.isfinite(r["hdop"])]
+    if hd:
+        out["hdop_median"] = float(np.median(hd))
+    hu = [r["h_unc"] for r in recs if r.get("h_unc") is not None and math.isfinite(r["h_unc"]) and r["h_unc"] > 0]
+    if hu:
+        out["receiver_horizontal_uncertainty_median_m"] = float(np.median(hu))
+    if len(g) >= 2:
+        lat0, lon0 = np.mean([r["lat"] for r in g]), np.mean([r["lon"] for r in g])
+        k_lat, k_lon = 111_320.0, 111_320.0 * math.cos(math.radians(lat0))
+        n = np.array([(r["lat"] - lat0) * k_lat for r in g])
+        e = np.array([(r["lon"] - lon0) * k_lon for r in g])
+        h = np.hypot(n, e)
+        steps = np.hypot(np.diff(n), np.diff(e))
+        out.update(gps_wander_rms_m=float(np.sqrt((h ** 2).mean())), gps_wander_max_m=float(h.max()),
+                   gps_extent_m=float(math.hypot(n.max() - n.min(), e.max() - e.min())),
+                   gps_largest_jump_m=float(steps.max()) if len(steps) else None)
+        alt = [r["alt"] for r in g if r.get("alt") is not None]
+        if alt:
+            out["gps_altitude_range_m"] = float(max(alt) - min(alt))
+    loc = [r for r in recs if r.get("n") is not None and r.get("local_ok") is not False]  # PX4 reports 0 without an estimate
+    if len(loc) >= 2:
+        ls = log_summary(loc)
+        out.update(estimate_wander_rms_m=ls.get("horizontal_spread_rms_m"), estimate_wander_max_m=ls.get("horizontal_max_m"),
+                   estimate_vertical_spread_m=ls.get("vertical_spread_m"), local_position_ok_share=ls.get("local_position_ok_share"))
+    return out
+
+
 _HZ = re.compile(r"average rate:\s*([0-9.]+)")
 
 
@@ -91,9 +135,10 @@ def ros_hz(container, topic, seconds, domain_id=1):
 class Px4Pose:
     """Position, attitude and the local-position-ok flag from PX4 over MAVSDK (the Pixhawk on USB)."""
 
-    def __init__(self, connect):
+    def __init__(self, connect, gps=False):
         from neurodrone.vehicle import Px4Vehicle
-        self.veh, self.local_ok = Px4Vehicle(connect), None
+        self.veh, self.local_ok, self.gps = Px4Vehicle(connect), None, gps
+        self.gps_info, self.raw_gps = {}, {}
 
     async def start(self):
         await self.veh.connect()
@@ -105,15 +150,41 @@ class Px4Pose:
                     self.local_ok = bool(h.is_local_position_ok)
             except Exception:  # noqa: BLE001
                 pass
-        self._h = asyncio.create_task(health())
+        self._tasks = [asyncio.create_task(health())]
+        if self.gps:
+            async def gps_info():
+                try:
+                    async for g in t.gps_info():
+                        self.gps_info = dict(sats=int(g.num_satellites), fix=str(g.fix_type).split(".")[-1])
+                except Exception:  # noqa: BLE001
+                    pass
+
+            async def raw_gps():
+                try:
+                    async for r in t.raw_gps():
+                        self.raw_gps = dict(lat=r.latitude_deg, lon=r.longitude_deg, alt=r.absolute_altitude_m,
+                                            hdop=r.hdop, h_unc=r.horizontal_uncertainty_m)
+                except Exception:  # noqa: BLE001
+                    pass
+            self._tasks += [asyncio.create_task(gps_info()), asyncio.create_task(raw_gps())]
 
     async def sample(self):
-        s = await self.veh.get_state()
-        return dict(t=time.time(), n=s.north_m, e=s.east_m, d=s.down_m, yaw=s.yaw_deg, roll=s.roll_deg,
-                    pitch=s.pitch_deg, local_ok=self.local_ok)
+        try:
+            s = await self.veh.get_state()
+            r = dict(t=time.time(), n=s.north_m, e=s.east_m, d=s.down_m, yaw=s.yaw_deg, roll=s.roll_deg,
+                     pitch=s.pitch_deg, local_ok=self.local_ok)
+        except Exception:  # noqa: BLE001 - no position estimate yet (e.g. no GPS fix): keep logging the GPS
+            if not self.gps:
+                raise
+            r = dict(t=time.time(), n=None, e=None, d=None, yaw=None, roll=None, pitch=None, local_ok=self.local_ok)
+        if self.gps:
+            r.update(self.gps_info)
+            r.update(self.raw_gps)
+        return r
 
     async def close(self):
-        self._h.cancel()
+        for task in self._tasks:
+            task.cancel()
         await self.veh.close()
 
 
@@ -168,6 +239,17 @@ async def cmd_drift(a, pose, ask=input):
     return s
 
 
+async def cmd_gps(a, pose):
+    print(f"Drone standing still for {a.duration:.0f} s, logging GPS and PX4's estimate. Do not touch it.", flush=True)
+    with open(os.path.join(a.out, "gps.jsonl"), "w") as fh:
+        recs = await collect(pose, a.duration, rate=5.0, fh=fh)
+    s = gps_summary(recs)
+    s["note"] = a.note
+    json.dump(s, open(os.path.join(a.out, "gps_summary.json"), "w"), indent=1)
+    print(json.dumps(s, indent=1), flush=True)
+    return s
+
+
 async def cmd_log(a, pose):
     stop, lat, th = threading.Event(), [], None
     if a.vlm_load:
@@ -194,12 +276,12 @@ async def cmd_log(a, pose):
 
 def build_parser():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["drift", "log"])
+    ap.add_argument("cmd", choices=["gps", "drift", "log"])
     ap.add_argument("--out", default="stage6")
     ap.add_argument("--connect", default="serial:///dev/ttyACM0:57600")
     ap.add_argument("--laps", type=int, default=3)
     ap.add_argument("--average-s", type=float, default=2.0)
-    ap.add_argument("--duration", type=float, default=120.0)
+    ap.add_argument("--duration", type=float, default=None, help="s (default: gps 300, log 120)")
     ap.add_argument("--vlm-load", action="store_true")
     ap.add_argument("--ollama", default="http://127.0.0.1:11434")
     ap.add_argument("--model", default="qwen3-vl:4b-instruct")
@@ -207,15 +289,18 @@ def build_parser():
     ap.add_argument("--ros-hz-container", default=None, help="Docker container running the VIO (Isaac ROS)")
     ap.add_argument("--ros-topic", default="/visual_slam/tracking/vo_pose_covariance")
     ap.add_argument("--min-vio-hz", type=float, default=30.0)
+    ap.add_argument("--note", default="", help="gps: where the drone stood, e.g. 'middle of the lab, 4 m from window'")
     return ap
 
 
 async def amain(a, pose=None, ask=input):
     own = pose is None
     if own:
-        pose = Px4Pose(a.connect)
+        pose = Px4Pose(a.connect, gps=a.cmd == "gps")
         await pose.start()
     try:
+        if a.cmd == "gps":
+            return await cmd_gps(a, pose)
         if a.cmd == "drift":
             return await cmd_drift(a, pose, ask)
         return await cmd_log(a, pose)
@@ -226,6 +311,8 @@ async def amain(a, pose=None, ask=input):
 
 def main(argv=None, pose=None, ask=input):
     a = build_parser().parse_args(argv)
+    if a.duration is None:
+        a.duration = 300.0 if a.cmd == "gps" else 120.0
     a.out = os.path.expanduser(a.out)
     os.makedirs(a.out, exist_ok=True)
     asyncio.run(amain(a, pose, ask))

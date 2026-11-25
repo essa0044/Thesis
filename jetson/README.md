@@ -100,7 +100,12 @@ adapter into the Pixhawk's TELEM2 (921600 baud). The mission program keeps its o
    `mavrospy.launch.py` here: it also starts a node that flies OFFBOARD patterns.
 5. Optional, better: IMU noise by Allan variance (>= 3 h of the D435i lying still, `allan_ros2`), values into the
    VSLAM launch file.
-6. Checks (propellers off first): `$PY $ND/vio_check.py drift --laps 3` (carry the drone around the room and back onto
+6. Before step 2 (still on PX4's default GPS parameters): **GPS indoors, measured.** Drone standing still on a
+   table, GPS connected, 5 minutes, once near a window and once in the middle of the lab:
+   `$PY $ND/vio_check.py gps --note "middle of the lab" --out ~/nd_results/stage6/gps_middle`.
+   Nothing moves, so every metre the position wanders (and every jump) is GPS error: the evidence in Chapter 6 for
+   why the drone flies on visual odometry. QGroundControl shows the satellites and HDOP live meanwhile.
+7. Checks (propellers off first): `$PY $ND/vio_check.py drift --laps 3` (carry the drone around the room and back onto
    the floor mark); then with the safety pilot hovering in Position mode `$PY $ND/vio_check.py log --duration 120`;
    then the same with `--vlm-load --ros-hz-container isaac_ros_dev-aarch64-container` - the pass check is
    VIO >= 30 Hz and stable hold while the VLM answers non-stop.

@@ -58,3 +58,32 @@ def test_vio_check_commands(tmp_path):
         vc.main(["log", "--duration", "0.5", "--vlm-load", "--ollama", srv.url, "--out", str(tmp_path / "l")], pose=FakePose())
     s = json.load(open(tmp_path / "l" / "summary.json"))
     assert s["n"] > 3 and s["vlm_load"] is True and s["vlm_answers"] >= 1
+
+
+def test_gps_summary_standing_still():
+    import math
+    lat0, lon0 = 48.766, 11.432  # Ingolstadt
+    recs = []
+    for i in range(100):
+        dn = 2.0 if i == 50 else 0.3 * math.sin(i / 5)  # wandering, one 2 m jump
+        recs.append(dict(t=i, lat=lat0 + dn / 111_320.0, lon=lon0, alt=400 + 0.01 * i, sats=7 + i % 3, fix="FIX_3D",
+                         hdop=2.5, h_unc=4.0, n=0.1 * math.sin(i / 7), e=0.0, d=0.0, local_ok=True))
+    recs += [dict(t=100 + i, lat=None, lon=None, sats=2, fix="NO_FIX", n=None) for i in range(25)]
+    s = vc.gps_summary(recs)
+    assert s["fix_share"] == pytest.approx(0.8) and s["fix_types"]["NO_FIX"] == pytest.approx(0.2)
+    assert s["sats_min"] == 2 and s["hdop_median"] == 2.5 and s["receiver_horizontal_uncertainty_median_m"] == 4.0
+    assert s["gps_wander_max_m"] == pytest.approx(2.0, abs=0.1) and s["gps_largest_jump_m"] > 1.5
+    assert s["gps_altitude_range_m"] == pytest.approx(0.99, abs=0.01) and s["estimate_wander_max_m"] > 0
+
+
+class FakeGpsPose(FakePose):
+    async def sample(self):
+        r = await super().sample()
+        r.update(sats=6, fix="FIX_3D", lat=48.766 + 1e-6 * (self.k % 5), lon=11.432, alt=400.0, hdop=3.0, h_unc=5.0)
+        return r
+
+
+def test_vio_check_gps_command(tmp_path):
+    vc.main(["gps", "--duration", "0.5", "--note", "test", "--out", str(tmp_path)], pose=FakeGpsPose())
+    s = json.load(open(tmp_path / "gps_summary.json"))
+    assert s["n"] >= 2 and s["sats_median"] == 6 and s["note"] == "test" and s["gps_wander_max_m"] < 0.5
